@@ -7,17 +7,17 @@ gray palette of [scoutsdesapotres.org](https://www.scoutsdesapotres.org).
 
 ## Run locally
 
-Requirements: Node.js 24, pnpm 11.25.0, and a running
-[Scout des Apôtres backend](https://github.com/selimellieh72/scoutapotresapp_backend).
+Requirements: Node.js 24 and pnpm 11.25.0.
 
 ```sh
 pnpm install --frozen-lockfile
-cp .env.example .env
 pnpm start
 ```
 
-Set `EXPO_PUBLIC_API_URL` in `.env` to your reachable API URL, including `/api/v1`.
-The default is `http://localhost:3000/api/v1`.
+The app defaults to the hosted Scout backend through the temporary HTTPS beta
+tunnel. If the tunnel URL changes, update the API URL and rebuild the app.
+To use a different backend, copy `.env.example` to `.env` and set
+`EXPO_PUBLIC_API_URL` to the reachable API URL, including `/api/v1`.
 
 - Physical phone: use your computer's LAN address, not `localhost`.
 - Android emulator: the host machine is normally `10.0.2.2`.

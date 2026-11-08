@@ -3,9 +3,9 @@ import { StyleSheet } from 'react-native';
 // Tints and darker green text preserve the palette while keeping text readable.
 export const colors = { ink: '#323232', muted: '#6D6D6D', primary: '#CA3737', primaryTint: '#FFF1F1',
   brandGreen: '#0D9523', green: '#08751C', greenTint: '#EDF7EE', yellow: '#FFEE14', yellowTint: '#FFFCE0',
-  paper: '#F4F4F4', white: '#FFFFFF', line: '#E8E8E8', danger: '#A12D2D', softDanger: '#FFF0ED' };
+  canvas: '#FAF9F7', navigation: '#EFEEEB', paper: '#F4F4F4', white: '#FFFFFF', line: '#E8E8E8', danger: '#A12D2D', softDanger: '#FFF0ED' };
 export const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.white },
+  page: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: 20, gap: 20, paddingBottom: 36 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
@@ -14,10 +14,10 @@ export const styles = StyleSheet.create({
   body: { color: colors.ink, fontSize: 16, lineHeight: 25 },
   muted: { color: colors.muted, fontSize: 14, lineHeight: 22 },
   eyebrow: { color: colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 2 },
-  separator: { height: 1, backgroundColor: colors.line },
-  field: { borderWidth: 1, borderColor: colors.line, borderRadius: 12, paddingHorizontal: 14,
-    paddingVertical: 14, minHeight: 50, color: colors.ink, backgroundColor: colors.paper, fontSize: 16 },
+  separator: { height: 8 },
+  field: { borderWidth: 0, borderRadius: 18, paddingHorizontal: 16,
+    paddingVertical: 14, minHeight: 52, color: colors.ink, backgroundColor: colors.white, fontSize: 16, boxShadow: '0 5px 18px #3232320A' },
   label: { color: colors.ink, fontSize: 14, fontWeight: '600', marginBottom: 8 },
   error: { color: colors.danger, fontSize: 14, lineHeight: 21 },
-  card: { backgroundColor: colors.paper, padding: 20, borderRadius: 16, gap: 12 },
+  card: { backgroundColor: colors.white, padding: 20, borderRadius: 24, gap: 12, boxShadow: '0 7px 24px #3232320D' },
 });

@@ -9,7 +9,8 @@ import { useDialog } from '../ui/dialog';
 
 function SettingRow({ icon, title, subtitle, onPress, right }: { icon: IconName; title: string; subtitle?: string; onPress?: () => void; right?: React.ReactNode }) {
   const content = <><View style={{ backgroundColor: colors.paper, padding: 10, borderRadius: 12 }}><Icon name={icon} size={20} color={colors.primary} /></View><View style={{ flex: 1, gap: 3 }}><Text style={{ color: colors.ink, fontSize: 15, fontWeight: '500' }}>{title}</Text>{subtitle && <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18 }}>{subtitle}</Text>}</View>{right ?? (onPress ? <Icon name="chevron-right" color={colors.muted} size={18} /> : null)}</>;
-  return onPress ? <Pressable accessibilityRole="button" onPress={onPress} style={[styles.row, { paddingVertical: 14 }]}>{content}</Pressable> : <View style={[styles.row, { paddingVertical: 14 }]}>{content}</View>;
+  const rowStyle = [styles.row, { minHeight: 62, paddingVertical: 10, paddingHorizontal: 14, marginTop: 8, borderRadius: 18, backgroundColor: colors.white }];
+  return onPress ? <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [rowStyle, { opacity: pressed ? 0.65 : 1 }]}>{content}</Pressable> : <View style={rowStyle}>{content}</View>;
 }
 export function SettingsScreen() {
   const auth = useSession();

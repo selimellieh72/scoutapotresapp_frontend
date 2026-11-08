@@ -31,15 +31,15 @@ export function Avatar({ media, size = 42 }: { media?: Media | null; size?: numb
   </View>;
 }
 export function Header({ title, back, right, subtitle }: { title: string; back?: boolean; right?: React.ReactNode; subtitle?: string }) {
-  return <View style={{ paddingHorizontal: back ? 8 : 20, minHeight: 76, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.line }}>
+  return <View style={{ paddingHorizontal: back ? 8 : 20, minHeight: 68, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.canvas }}>
     {back && <IconButton icon="arrow-left" label={copy.back} onPress={() => router.canGoBack() ? router.back() : router.replace('/')} />}
     <View style={{ flex: 1, paddingVertical: 12 }}>{subtitle && <Text style={[styles.eyebrow, { marginBottom: 5 }]}>{subtitle}</Text>}<Text numberOfLines={1} style={[styles.heading, { fontSize: 21 }]}>{title}</Text></View>
     {right}
   </View>;
 }
-export function Page({ children }: { children: React.ReactNode }) {
+export function Page({ children, backgroundColor }: { children: React.ReactNode; backgroundColor?: string }) {
   const focused = useIsFocused();
-  return <SafeAreaView edges={['top']} style={styles.page} pointerEvents={focused ? 'auto' : 'none'}
+  return <SafeAreaView edges={['top']} style={[styles.page, backgroundColor ? { backgroundColor } : undefined]} pointerEvents={focused ? 'auto' : 'none'}
     aria-hidden={!focused} accessibilityElementsHidden={!focused} importantForAccessibility={focused ? 'auto' : 'no-hide-descendants'}>{children}</SafeAreaView>;
 }
 export function FormBody({ children }: { children: React.ReactNode }) {

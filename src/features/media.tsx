@@ -40,13 +40,13 @@ function JournalImage({ uri, label, onOpen }: { uri: string; label: string; onOp
   </Pressable>;
 }
 
-export function MediaGallery({ media, postId, visible = true, overrides, interactive = true }: { media: Media[]; postId?: string; visible?: boolean; overrides?: Record<string, string>; interactive?: boolean }) {
+export function MediaGallery({ media, postId, visible = true, overrides, interactive = true, largeRadius = false }: { media: Media[]; postId?: string; visible?: boolean; overrides?: Record<string, string>; interactive?: boolean; largeRadius?: boolean }) {
   const [width, setWidth] = useState(320);
   const [index, setIndex] = useState(0);
   if (!media.length) return null;
   const current = media[index] ?? media[0]!;
   const height = Math.max(190, Math.min(360, width * current.height / Math.max(1, current.width)));
-  return <View onLayout={event => setWidth(event.nativeEvent.layout.width)} style={{ borderRadius: 14, overflow: 'hidden', backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line }}>
+  return <View onLayout={event => setWidth(event.nativeEvent.layout.width)} style={{ borderRadius: largeRadius ? 28 : 14, overflow: 'hidden', backgroundColor: colors.paper }}>
     <FlatList data={media} horizontal pagingEnabled keyExtractor={asset => asset.id} showsHorizontalScrollIndicator={false}
       initialNumToRender={1} maxToRenderPerBatch={2} windowSize={3}
       onMomentumScrollEnd={event => setIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
@@ -55,6 +55,6 @@ export function MediaGallery({ media, postId, visible = true, overrides, interac
           <JournalImage uri={overrides?.[item.id] ?? http.mediaUrl(item.url)} label={`Open image ${position + 1} of ${media.length}`}
             onOpen={interactive ? () => router.push({ pathname: '/media/[id]', params: { id: item.id, ...(postId ? { postId } : {}) } }) : undefined} />}
       </View>} />
-    {media.length > 1 && <View style={{ position: 'absolute', right: 10, top: 10, borderRadius: 12, backgroundColor: '#202720BF', paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ color: 'white', fontSize: 11 }}>{index + 1} / {media.length}</Text></View>}
+    {media.length > 1 && <View style={{ position: 'absolute', right: 10, ...(largeRadius ? { bottom: 10 } : { top: 10 }), borderRadius: 12, backgroundColor: '#202720BF', paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ color: 'white', fontSize: 11 }}>{index + 1} / {media.length}</Text></View>}
   </View>;
 }

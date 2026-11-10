@@ -10,3 +10,4 @@ ios/
 android/
 *.log
 .DS_Store
+credentials.json

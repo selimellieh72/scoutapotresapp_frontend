@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "autoIncrement": true,
+      "node": "24.22.2",
+      "pnpm": "11.25.0",
+      "ios": {
+        "resourceClass": "default"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6832028423"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    }
+  }
+}

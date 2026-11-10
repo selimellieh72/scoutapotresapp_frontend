@@ -3,14 +3,28 @@
     "name": "Scout des Apôtres",
     "slug": "scout-des-apotres",
     "version": "0.1.0",
+    "icon": "./assets/brand/app-icon.png",
     "scheme": "scoutapotres",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "org.scoutsdesapotres.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.scoutsdesapotres.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/android-adaptive-foreground.png",
+        "backgroundColor": "#04311F"
+      }
     },
     "web": {
       "bundler": "metro",
+      "favicon": "./assets/brand/app-icon.png",
       "output": "single",
       "name": "Scout des Apôtres"
     },
@@ -28,6 +42,17 @@
       "expo-status-bar",
       "expo-video",
       "expo-image"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "24e5c990-5570-4e3a-a61f-8d76185f8d82"
+      }
+    },
+    "owner": "selimellieh"
   }
 }

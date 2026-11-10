@@ -1,7 +1,8 @@
-# On every push to main, start the EAS workflow in .eas/workflows/release-internal.yml
-# (build iOS + Android, then submit to TestFlight and Google Play internal testing).
-# Needs the EXPO_TOKEN repository secret (an Expo access token for the project owner).
-name: Release to internal testers
+# On every push to main, run the EAS workflow in .eas/workflows/release-internal.yml
+# (build iOS + Android, submit to TestFlight "Scout Internal Beta" and Google Play internal testing),
+# then send the new iOS build to the public TestFlight group and submit it for Beta App Review.
+# Secrets: EXPO_TOKEN (Expo access token), ASC_API_KEY_P8 (App Store Connect team API key, App Manager).
+name: Release to testers
 
 on:
   push:
@@ -16,9 +17,16 @@ concurrency:
   group: eas-release
   cancel-in-progress: false
 
+env:
+  ASC_APP_ID: '6832028423'
+  ASC_KEY_ID: GC3VL5F6V9
+  ASC_ISSUER_ID: be93a24b-d9b2-411d-80bb-345e5957fc46
+  PUBLIC_GROUP: Public Testers
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -36,5 +44,30 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Start EAS release workflow
-        run: eas workflow:run .eas/workflows/release-internal.yml --non-interactive
+      - name: Record start time
+        run: echo "STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # Android submission fails until the Play Console app exists, so a failed run
+      # must not stop the public TestFlight step when the iOS build itself succeeded.
+      - name: Build and submit with EAS
+        continue-on-error: true
+        run: eas workflow:run .eas/workflows/release-internal.yml --non-interactive --wait
+
+      - name: Find the new iOS build
+        id: ios
+        run: |
+          eas build:list --platform ios --limit 1 --json --non-interactive > ios-build.json
+          node -e '
+            const [b] = require("./ios-build.json");
+            const fresh = b && b.status === "FINISHED" && b.createdAt >= process.env.STARTED_AT;
+            console.log(b ? `Latest iOS build ${b.appBuildVersion}: ${b.status} (${b.createdAt})` : "No iOS build");
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, `number=${fresh ? b.appBuildVersion : ""}\n`);
+          '
+
+      - name: Send to public TestFlight testers
+        if: steps.ios.outputs.number != ''
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          BUILD_NUMBER: ${{ steps.ios.outputs.number }}
+          WHATS_NEW: ${{ github.event.head_commit.message }}
+        run: node scripts/testflight-public.mjs

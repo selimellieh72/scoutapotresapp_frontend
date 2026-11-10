@@ -37,4 +37,4 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Start EAS release workflow
-        run: eas workflow:run .eas/workflows/release-internal.yml --non-interactive --git-commit-hash "$GITHUB_SHA" --git-branch "$GITHUB_REF_NAME"
+        run: eas workflow:run .eas/workflows/release-internal.yml --non-interactive

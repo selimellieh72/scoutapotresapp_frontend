@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { api, session, usePreferences, useSession } from '../providers';
 import { Avatar, Button, Header, Icon, Notice, Page, type IconName } from '../ui/components';
 import { colors, styles } from '../ui/theme';
 import { useDialog } from '../ui/dialog';
+import { useTabBarScroll } from '../ui/tabBarScroll';
 
 function SettingRow({ icon, title, subtitle, onPress, right }: { icon: IconName; title: string; subtitle?: string; onPress?: () => void; right?: React.ReactNode }) {
   const content = <><View style={{ backgroundColor: colors.paper, padding: 10, borderRadius: 12 }}><Icon name={icon} size={20} color={colors.primary} /></View><View style={{ flex: 1, gap: 3 }}><Text style={{ color: colors.ink, fontSize: 15, fontWeight: '500' }}>{title}</Text>{subtitle && <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18 }}>{subtitle}</Text>}</View>{right ?? (onPress ? <Icon name="chevron-right" color={colors.muted} size={18} /> : null)}</>;
@@ -13,6 +14,7 @@ function SettingRow({ icon, title, subtitle, onPress, right }: { icon: IconName;
   return onPress ? <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [rowStyle, { opacity: pressed ? 0.65 : 1 }]}>{content}</Pressable> : <View style={rowStyle}>{content}</View>;
 }
 export function SettingsScreen() {
+  const tabBarScroll = useTabBarScroll();
   const auth = useSession();
   const preferences = usePreferences();
   const dialog = useDialog();
@@ -20,7 +22,7 @@ export function SettingsScreen() {
   const info = useQuery({ queryKey: ['app-info'], queryFn: () => api.info() });
   const logout = async () => { setBusy(true); try { await session.logout(); dialog.toast('You’re signed out.'); } catch { dialog.toast('Signed out on this device.'); } finally { setBusy(false); } };
   const open = async (url: string) => { try { await Linking.openURL(url); } catch { dialog.toast('We couldn’t open this link.'); } };
-  return <Page><Header title="Settings" subtitle="MAKE YOURSELF AT HOME" /><ScrollView contentContainerStyle={styles.content}>
+  return <Page><Header title="Settings" subtitle="MAKE YOURSELF AT HOME" /><ScrollView {...tabBarScroll} contentContainerStyle={[styles.content, Platform.OS === 'ios' && { paddingBottom: 124 }]}>
     <Pressable accessibilityRole="button" accessibilityLabel="Open group profile" onPress={() => router.push('/group')} style={[styles.card, styles.row]}><Avatar size={48} /><View style={{ flex: 1 }}><Text style={styles.heading}>Scout des Apôtres</Text><Text style={styles.muted}>A shared sense of adventure.</Text></View><Icon name="arrow-up-right" color={colors.primary} /></Pressable>
     <View><Text style={styles.eyebrow}>YOUR EXPERIENCE</Text>
       <SettingRow icon="globe" title="App language" right={<Text style={styles.muted}>English</Text>} />

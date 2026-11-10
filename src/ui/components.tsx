@@ -25,9 +25,10 @@ export function Button({ title, onPress, busy, disabled, variant = 'primary', ic
     <Text style={{ color, fontSize: 15, fontWeight: '600' }}>{title}</Text>
   </Pressable>;
 }
-export function Avatar({ media, size = 42 }: { media?: Media | null; size?: number }) {
+export function Avatar({ media, size = 42, name = 'Scout des Apôtres' }: { media?: Media | null; size?: number; name?: string }) {
+  const initials = name.split(/[\s-]+/).filter(part => part.length > 2 && !['groupe', 'scout', 'des', 'les', 'notre', 'dame'].includes(part.toLocaleLowerCase())).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || 'SA';
   return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primary, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-    {media ? <Image source={http.mediaUrl(media.url)} style={{ width: size, height: size }} contentFit="cover" /> : <Text accessibilityLabel="Scout des Apôtres" style={{ color: 'white', fontSize: size * 0.32, fontWeight: '700', letterSpacing: 1 }}>SA</Text>}
+    {media ? <Image source={http.mediaUrl(media.url)} style={{ width: size, height: size }} contentFit="cover" /> : <Text accessibilityLabel={name} style={{ color: 'white', fontSize: size * 0.32, fontWeight: '700', letterSpacing: 1 }}>{initials}</Text>}
   </View>;
 }
 export function Header({ title, back, right, subtitle }: { title: string; back?: boolean; right?: React.ReactNode; subtitle?: string }) {
@@ -37,9 +38,9 @@ export function Header({ title, back, right, subtitle }: { title: string; back?:
     {right}
   </View>;
 }
-export function Page({ children, backgroundColor }: { children: React.ReactNode; backgroundColor?: string }) {
+export function Page({ children, backgroundColor, safeTop = true }: { children: React.ReactNode; backgroundColor?: string; safeTop?: boolean }) {
   const focused = useIsFocused();
-  return <SafeAreaView edges={['top']} style={[styles.page, backgroundColor ? { backgroundColor } : undefined]} pointerEvents={focused ? 'auto' : 'none'}
+  return <SafeAreaView edges={safeTop ? ['top'] : []} style={[styles.page, backgroundColor ? { backgroundColor } : undefined]} pointerEvents={focused ? 'auto' : 'none'}
     aria-hidden={!focused} accessibilityElementsHidden={!focused} importantForAccessibility={focused ? 'auto' : 'no-hide-descendants'}>{children}</SafeAreaView>;
 }
 export function FormBody({ children }: { children: React.ReactNode }) {

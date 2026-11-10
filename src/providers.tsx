@@ -17,7 +17,7 @@ const storage: SecretStorage = Platform.OS === 'web' ? {
 export const session = new SessionManager(http, storage);
 export const api = new ApiClient(http, session);
 export const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000 }, mutations: { retry: false } } });
-export const invalidateContent = () => queryClient.invalidateQueries({ predicate: query => ['posts', 'post', 'group', 'search', 'discover'].includes(String(query.queryKey[0])) });
+export const invalidateContent = () => queryClient.invalidateQueries({ predicate: query => ['posts', 'post', 'group', 'groups', 'search', 'discover'].includes(String(query.queryKey[0])) });
 export function useSession() { return useSyncExternalStore(session.subscribe, session.snapshot, session.snapshot); }
 const Preferences = createContext({ autoplay: false, setAutoplay: (_value: boolean) => {} });
 const Playback = createContext({ active: null as string | null, claim: (_id: string) => {} });

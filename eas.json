@@ -19,7 +19,10 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6832028423"
+        "ascAppId": "6832028423",
+        "groups": [
+          "Scout Internal Beta"
+        ]
       },
       "android": {
         "track": "internal",

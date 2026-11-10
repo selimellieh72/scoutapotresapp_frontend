@@ -1,10 +1,8 @@
-# Every push to main builds the app and ships it to the internal testers:
+# Builds the app and ships it to the internal testers:
 # iOS -> TestFlight (Scout Internal Beta), Android -> Google Play internal testing.
+# Started on every push to main by .github/workflows/eas-release.yml (GitHub Actions),
+# or by hand with: eas workflow:run .eas/workflows/release-internal.yml
 name: Release to internal testers
-
-on:
-  push:
-    branches: ['main']
 
 jobs:
   build_ios:

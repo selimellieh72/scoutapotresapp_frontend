@@ -1,0 +1,40 @@
+# On every push to main, start the EAS workflow in .eas/workflows/release-internal.yml
+# (build iOS + Android, then submit to TestFlight and Google Play internal testing).
+# Needs the EXPO_TOKEN repository secret (an Expo access token for the project owner).
+name: Release to internal testers
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+  workflow_dispatch:
+
+concurrency:
+  group: eas-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Start EAS release workflow
+        run: eas workflow:run .eas/workflows/release-internal.yml --non-interactive --git-commit-hash "$GITHUB_SHA" --git-branch "$GITHUB_REF_NAME"

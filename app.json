@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Scout des Apôtres",
+    "name": "Scout des Apotres",
     "slug": "scout-des-apotres",
     "version": "0.1.0",
     "icon": "./assets/brand/app-icon.png",
@@ -13,6 +13,9 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleDisplayName": "Scout des Apôtres"
       }
     },
     "android": {
@@ -41,7 +44,12 @@
       ],
       "expo-status-bar",
       "expo-video",
-      "expo-image"
+      "expo-image",
+      "expo-font",
+      [
+        "./plugins/withAndroidAppName",
+        "Scout des Apôtres"
+      ]
     ],
     "extra": {
       "router": {

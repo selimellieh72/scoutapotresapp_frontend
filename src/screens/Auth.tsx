@@ -4,10 +4,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { api, session } from '../providers';
 import { ApiError, userMessage } from '../api/http';
 import { Avatar, Button, Field, FormBody, Header, Icon, Notice, Page } from '../ui/components';
-import { colors, styles } from '../ui/theme';
+import { useTheme } from '../ui/theme';
 import { useDialog } from '../ui/dialog';
 
 export function AuthScreen({ mode = 'login' }: { mode?: 'login' | 'forgot' | 'reset' }) {
+  const { colors, styles } = useTheme();
   const params = useLocalSearchParams<{ token?: string }>();
   const token = typeof params.token === 'string' ? params.token : '';
   const [identifier, setIdentifier] = useState('');

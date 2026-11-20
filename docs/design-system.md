@@ -28,6 +28,26 @@ retains the requested text-first timeline: compact group identity, publication
 metadata, readable post text, inline media, subtle dividers, and bottom navigation.
 It contains no engagement row or social feature placeholders.
 
-Colors are centralized in `src/ui/theme.ts`. The initial SA monogram is a neutral
+Colors are centralized in `src/ui/theme.tsx`. The initial SA monogram is a neutral
 fallback rather than a reproduction of the website logo. No website photos,
 articles, registration form, or other website functionality have been imported.
+
+## Dark mode
+
+The app follows the device appearance by default. Profile → Appearance lets a user
+pick System, Light or Dark; the choice is stored on the device (`scout.theme`).
+
+- Read colors and shared styles with `const { colors, styles } = useTheme()` inside
+  components. Never import a palette at module scope for UI that should follow the theme.
+- `colors.surface` is the card/sheet background. `colors.white` is literal white and is
+  only for text or icons on brand fills, photos and gradients.
+- `colors.greenDeep` stays `#08751C` in both modes for green fills behind white text;
+  `colors.green` is the readable green text/icon tone (lighter in dark mode).
+
+| Token | Dark value | Notes |
+| --- | --- | --- |
+| Canvas / Surface | `#121311` / `#1C1D1B` | Warm near-black, not pure black |
+| Ink / Muted | `#ECEAE6` / `#A3A09A` | 15.5:1 and 7.1:1 on canvas |
+| Primary red | `#D64545` | Lifted for dark: 4.3:1 on canvas, 4.4:1 with white text |
+| Green text | `#5CC870` | 8.8:1 on canvas |
+| Danger | `#F07A7A` | 5.6:1 on its soft-danger fill |

@@ -11,7 +11,7 @@ import { Video } from '../features/media';
 import { ApiError } from '../api/http';
 import { http } from '../config';
 import { Avatar, Empty, Header, Icon, IconButton, Page, Skeleton } from '../ui/components';
-import { colors, styles } from '../ui/theme';
+import { lightColors, useTheme } from '../ui/theme';
 import { categoryLabels, type Post } from '../api/types';
 
 const detailDate = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -19,6 +19,7 @@ const detailDate = (value: string) => new Date(value).toLocaleDateString('fr-FR'
 const postSeed = (post: Post) => [...post.id].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) | 0, 0);
 
 function PostDetailContent({ post }: { post: Post }) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const width = Math.min(720, windowWidth);
@@ -35,12 +36,12 @@ function PostDetailContent({ post }: { post: Post }) {
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
   const top = Platform.OS === 'ios' ? insets.top + 12 : 14;
 
-  return <Page backgroundColor={colors.white} safeTop={Platform.OS !== 'ios'}>
-    <ScrollView style={{ flex: 1, backgroundColor: colors.white }} contentContainerStyle={{ paddingBottom: 28 + insets.bottom }} showsVerticalScrollIndicator={false}>
-      <View style={{ height: heroHeight, backgroundColor: colors.green, overflow: 'hidden' }}>
+  return <Page backgroundColor={colors.surface} safeTop={Platform.OS !== 'ios'}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentContainerStyle={{ paddingBottom: 28 + insets.bottom }} showsVerticalScrollIndicator={false}>
+      <View style={{ height: heroHeight, backgroundColor: colors.greenDeep, overflow: 'hidden' }}>
         {media?.type === 'image' ? <Pressable accessibilityRole="button" accessibilityLabel="Open post image" onPress={() => router.push({ pathname: '/media/[id]', params: { id: media.id, postId: post.id } })} style={StyleSheet.absoluteFill}>
           <Image source={http.mediaUrl(media.url)} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityLabel={post.title || 'Post image'} />
-        </Pressable> : media?.type === 'video' ? <Video media={media} /> : <LinearGradient colors={[colors.greenTint, colors.green, '#153B20']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+        </Pressable> : media?.type === 'video' ? <Video media={media} /> : <LinearGradient colors={[lightColors.greenTint, colors.greenDeep, '#153B20']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
           <View style={{ width: heroHeight * 0.72, height: heroHeight * 0.72, position: 'absolute', right: -heroHeight * 0.18, top: -heroHeight * 0.2, borderRadius: heroHeight, backgroundColor: '#FFFFFF12' }} />
           <View style={{ width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF18' }}><Icon name="compass" size={48} color={colors.white} /></View>
         </LinearGradient>}
@@ -51,17 +52,17 @@ function PostDetailContent({ post }: { post: Post }) {
             <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.white, fontSize: 14, fontWeight: '700' }}>{post.group.name}</Text>
           </Pressable>
           <View style={{ width: 1, height: 22, backgroundColor: '#FFFFFFA0' }} />
-          <View style={{ minHeight: 24, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#FFFFFFEE' }}><Text style={{ color: colors.ink, fontSize: 10, lineHeight: 12, fontWeight: '700' }}>{categoryLabels[post.category]}</Text></View>
+          <View style={{ minHeight: 24, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#FFFFFFEE' }}><Text style={{ color: lightColors.ink, fontSize: 10, lineHeight: 12, fontWeight: '700' }}>{categoryLabels[post.category]}</Text></View>
         </View>
       </View>
 
-      <View style={{ marginTop: -1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderCurve: 'continuous', backgroundColor: colors.white, gap: 18 }}>
+      <View style={{ marginTop: -1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderCurve: 'continuous', backgroundColor: colors.surface, gap: 18 }}>
         <View style={{ width: 39, height: 6, borderRadius: 3, backgroundColor: colors.yellow }} />
         <Text selectable style={{ color: colors.ink, fontSize: 30, lineHeight: 35, fontWeight: '700', letterSpacing: -0.8 }}>{post.title || categoryLabels[post.category]}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}><Icon name="calendar" size={21} color={colors.muted} /><Text style={{ color: colors.muted, fontSize: 15 }}>{detailDate(post.publishedAt)}</Text></View>
         {post.text ? <Text selectable style={{ color: colors.ink, fontSize: 16, lineHeight: 25 }}>{post.text}</Text> : null}
 
-        <View style={{ minHeight: 48, paddingHorizontal: 6, borderRadius: 24, backgroundColor: '#F6F5F1', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
+        <View style={{ minHeight: 48, paddingHorizontal: 6, borderRadius: 24, backgroundColor: colors.subtle, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
           <Pressable accessibilityRole="button" accessibilityLabel={liked ? 'Unlike post' : 'Like post'} accessibilityState={{ selected: liked }} onPress={() => setLiked(value => !value)} hitSlop={4} style={({ pressed }) => ({ minWidth: 54, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: pressed ? 0.55 : 1 })}><Icon name="heart" size={20} color={liked ? colors.primary : colors.green} /><Text style={{ color: colors.ink, fontSize: 13 }}>{engagement.likes + (liked ? 1 : 0)}</Text></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="View comments" hitSlop={4} style={({ pressed }) => ({ minWidth: 54, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: pressed ? 0.55 : 1 })}><Icon name="message-circle" size={20} color={colors.green} /><Text style={{ color: colors.ink, fontSize: 13 }}>{engagement.comments}</Text></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark post'} accessibilityState={{ selected: saved }} onPress={() => setSaved(value => !value)} hitSlop={4} style={({ pressed }) => ({ minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.55 : 1 })}><Icon name="bookmark" size={20} color={saved ? colors.primary : colors.green} /></Pressable>
@@ -71,12 +72,12 @@ function PostDetailContent({ post }: { post: Post }) {
         <Pressable accessibilityRole="button" accessibilityLabel={`Open ${post.group.name}`} onPress={openGroup} style={({ pressed }) => ({ minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.65 : 1 })}>
           <Avatar media={post.group.logo} name={post.group.name} size={54} />
           <View style={{ flex: 1, gap: 3 }}><Text numberOfLines={1} style={{ color: colors.ink, fontSize: 16, fontWeight: '700' }}>{post.group.name}</Text><Text style={{ color: colors.muted, fontSize: 13 }}>Groupe scout</Text></View>
-          <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F6F5F1' }}><Icon name="chevron-right" size={21} color={colors.green} /></View>
+          <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.subtle }}><Icon name="chevron-right" size={21} color={colors.green} /></View>
         </Pressable>
 
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><Text style={{ color: colors.ink, fontSize: 21, fontWeight: '700' }}>Commentaires ({engagement.comments})</Text><Text style={{ color: colors.green, fontSize: 14, fontWeight: '600' }}>Tout voir</Text></View>
-          <View style={{ padding: 15, borderRadius: 22, backgroundColor: '#F7F6F2', flexDirection: 'row', alignItems: 'flex-start', gap: 11 }}>
+          <View style={{ padding: 15, borderRadius: 22, backgroundColor: colors.subtle, flexDirection: 'row', alignItems: 'flex-start', gap: 11 }}>
             <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.greenTint }}><Icon name="user" size={20} color={colors.green} /></View>
             <View style={{ flex: 1, gap: 2 }}><Text style={{ color: colors.ink, fontSize: 14, fontWeight: '700' }}>Yacine B.</Text><Text style={{ color: colors.muted, fontSize: 12 }}>Il y a 2 jours</Text><Text style={{ marginTop: 2, color: colors.ink, fontSize: 14, lineHeight: 20 }}>Quelle belle reprise ! Hâte de vivre toutes ces nouvelles aventures avec le groupe !</Text></View>
           </View>
@@ -84,8 +85,8 @@ function PostDetailContent({ post }: { post: Post }) {
       </View>
     </ScrollView>
 
-    <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} style={({ pressed }) => ({ position: 'absolute', top, left: 18, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFE8', boxShadow: '0 6px 20px #1D231C22', opacity: pressed ? 0.65 : 1 })}><Icon name="chevron-left" size={27} color={colors.green} /></Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel="Share post" onPress={share} style={({ pressed }) => ({ position: 'absolute', top, right: 18, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFE8', boxShadow: '0 6px 20px #1D231C22', opacity: pressed ? 0.65 : 1 })}><Icon name="share" size={23} color={colors.green} /></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={goBack} style={({ pressed }) => ({ position: 'absolute', top, left: 18, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.frosted, boxShadow: '0 6px 20px #1D231C22', opacity: pressed ? 0.65 : 1 })}><Icon name="chevron-left" size={27} color={colors.green} /></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Share post" onPress={share} style={({ pressed }) => ({ position: 'absolute', top, right: 18, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.frosted, boxShadow: '0 6px 20px #1D231C22', opacity: pressed ? 0.65 : 1 })}><Icon name="share" size={23} color={colors.green} /></Pressable>
   </Page>;
 }
 
@@ -103,6 +104,7 @@ export function PostDetailScreen() {
 }
 
 export function MediaViewerScreen() {
+  const { styles } = useTheme();
   const params = useLocalSearchParams<{ id: string; postId?: string }>();
   const id = typeof params.id === 'string' ? params.id : '';
   const postId = typeof params.postId === 'string' ? params.postId : '';

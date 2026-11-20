@@ -9,9 +9,10 @@ import { api, invalidateContent, useSession } from '../providers';
 import { ApiError, userMessage } from '../api/http';
 import { http } from '../config';
 import { Button, Empty, Field, FormBody, Header, Notice, Page, Skeleton } from '../ui/components';
-import { colors, styles } from '../ui/theme';
+import { useTheme } from '../ui/theme';
 
 export function EditGroupScreen() {
+  const { colors, styles } = useTheme();
   const auth = useSession();
   const query = useGroupById(auth.group?.id);
   const [name, setName] = useState('');

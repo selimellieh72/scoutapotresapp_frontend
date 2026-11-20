@@ -33,9 +33,10 @@ import {
   Page,
   Skeleton,
 } from "../ui/components"
-import { colors, styles } from "../ui/theme"
+import { useTheme } from "../ui/theme"
 
 export function ComposerScreen() {
+  const { colors, styles } = useTheme()
   const params = useLocalSearchParams<{ postId?: string }>()
   const postId =
     typeof params.postId === "string" ? params.postId : undefined

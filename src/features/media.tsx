@@ -6,9 +6,10 @@ import { router, useIsFocused } from 'expo-router';
 import { http } from '../config';
 import { usePlayback, usePreferences } from '../providers';
 import type { Media } from '../api/types';
-import { colors, styles } from '../ui/theme';
+import { useTheme } from '../ui/theme';
 
 export function Video({ media, visible = true, uri }: { media: Media; visible?: boolean; uri?: string }) {
+  const { colors, styles } = useTheme();
   const source = useMemo(() => ({ uri: uri ?? http.mediaUrl(media.url) }), [media.url, uri]);
   const player = useVideoPlayer(source, instance => { instance.muted = true; });
   const focused = useIsFocused();
@@ -32,6 +33,7 @@ export function Video({ media, visible = true, uri }: { media: Media; visible?: 
 }
 
 function JournalImage({ uri, label, onOpen, cover = false }: { uri: string; label: string; onOpen?: () => void; cover?: boolean }) {
+  const { styles } = useTheme();
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   return <Pressable accessibilityRole="button" accessibilityLabel={failed ? 'Retry image' : label} disabled={!failed && !onOpen}
@@ -41,6 +43,7 @@ function JournalImage({ uri, label, onOpen, cover = false }: { uri: string; labe
 }
 
 export function MediaGallery({ media, postId, visible = true, overrides, interactive = true, largeRadius = false, radius, fixedHeight, cover = false }: { media: Media[]; postId?: string; visible?: boolean; overrides?: Record<string, string>; interactive?: boolean; largeRadius?: boolean; radius?: number; fixedHeight?: number; cover?: boolean }) {
+  const { colors } = useTheme();
   const [width, setWidth] = useState(320);
   const [index, setIndex] = useState(0);
   if (!media.length) return null;
@@ -55,6 +58,6 @@ export function MediaGallery({ media, postId, visible = true, overrides, interac
           <JournalImage uri={overrides?.[item.id] ?? http.mediaUrl(item.url)} label={`Open image ${position + 1} of ${media.length}`} cover={cover}
             onOpen={interactive ? () => router.push({ pathname: '/media/[id]', params: { id: item.id, ...(postId ? { postId } : {}) } }) : undefined} />}
       </View>} />
-    {media.length > 1 && <View style={{ position: 'absolute', right: 10, ...(largeRadius ? { bottom: 10 } : { top: 10 }), borderRadius: 12, backgroundColor: '#202720BF', paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ color: 'white', fontSize: 11 }}>{index + 1} / {media.length}</Text></View>}
+    {media.length > 1 && <View style={{ position: 'absolute', right: 10, ...(largeRadius ? { bottom: 10 } : { top: 10 }), borderRadius: 12, backgroundColor: '#202720BF', paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ color: colors.white, fontSize: 11 }}>{index + 1} / {media.length}</Text></View>}
   </View>;
 }

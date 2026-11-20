@@ -14,7 +14,7 @@ import { uniquePosts } from '../domain/validation';
 import { Avatar, Button, Chips, Empty, Icon, IconButton, Skeleton } from '../ui/components';
 import { useDialog } from '../ui/dialog';
 import { copy } from '../copy';
-import { colors, styles } from '../ui/theme';
+import { lightColors, useTheme, type Palette } from '../ui/theme';
 import { useTabBarScroll } from '../ui/tabBarScroll';
 import { MediaGallery } from './media';
 
@@ -28,6 +28,7 @@ const MaskedView = NativeMaskedView as unknown as React.ComponentType<ViewProps 
 const openPostGroup = (id: string) => router.push({ pathname: '/groups/[id]', params: { id } });
 
 export function CategoryFilters({ value, onChange, includeAll = true, presentation = 'chips' }: { value?: Category; onChange: (value?: Category) => void; includeAll?: boolean; presentation?: 'chips' | 'strip' }) {
+  const { colors } = useTheme();
   const options = [...(includeAll ? [{ value: '', label: 'All' }] : []), ...categories.map(value => ({ value, label: categoryLabels[value] }))];
   if (presentation === 'strip') return <View style={{ minHeight: 54, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'stretch' }}>
     {options.map(option => {
@@ -61,6 +62,7 @@ const searchSnippet = (text: string, term: string) => {
   return `${start ? '…' : ''}${clean.slice(start, end)}${end < clean.length ? '…' : ''}`;
 };
 export function HighlightedText({ text, term, style, numberOfLines }: { text: string; term: string; style?: StyleProp<TextStyle>; numberOfLines?: number }) {
+  const { colors } = useTheme();
   const needle = term.trim();
   if (!needle) return <Text numberOfLines={numberOfLines} style={style}>{text}</Text>;
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -68,20 +70,21 @@ export function HighlightedText({ text, term, style, numberOfLines }: { text: st
   return <Text numberOfLines={numberOfLines} style={style}>{parts.map((part, index) => part.toLocaleLowerCase() === needle.toLocaleLowerCase() ? <Text key={`${part}-${index}`} style={{ color: colors.primary, fontWeight: '700' }}>{part}</Text> : part)}</Text>;
 }
 
-const categoryArtwork = {
+const categoryArtwork = (colors: Palette) => ({
   article: { icon: 'book-open' as const, background: colors.yellowTint, color: colors.ink },
   atelier: { icon: 'tool' as const, background: colors.primaryTint, color: colors.primary },
   installation: { icon: 'layers' as const, background: colors.greenTint, color: colors.green },
-  jeux: { icon: 'target' as const, background: '#FFF7D6', color: colors.ink },
-};
+  jeux: { icon: 'target' as const, background: colors.jeuxTint, color: colors.ink },
+});
 
 function CategoryArtwork({ category, height = 220, immersive = false }: { category: Category; height?: number; immersive?: boolean }) {
-  const visual = categoryArtwork[category];
-  const backgroundColor = immersive ? colors.green : visual.background;
+  const { colors } = useTheme();
+  const visual = categoryArtwork(colors)[category];
+  const backgroundColor = immersive ? colors.greenDeep : visual.background;
   const foreground = immersive ? colors.white : visual.color;
   return <View style={{ height, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor }}>
-    <View style={{ position: 'absolute', width: height * 0.78, height: height * 0.78, right: -height * 0.22, top: -height * 0.32, borderRadius: height, backgroundColor: immersive ? '#FFFFFF12' : '#FFFFFF80' }} />
-    <View style={{ position: 'absolute', width: height * 0.42, height: height * 0.42, left: -height * 0.12, bottom: -height * 0.14, borderRadius: height, backgroundColor: immersive ? '#FFEE1426' : '#FFFFFF70' }} />
+    <View style={{ position: 'absolute', width: height * 0.78, height: height * 0.78, right: -height * 0.22, top: -height * 0.32, borderRadius: height, backgroundColor: immersive ? '#FFFFFF12' : colors.glow }} />
+    <View style={{ position: 'absolute', width: height * 0.42, height: height * 0.42, left: -height * 0.12, bottom: -height * 0.14, borderRadius: height, backgroundColor: immersive ? '#FFEE1426' : colors.glow }} />
     <View style={{ alignItems: 'center', gap: 10 }}>
       <Icon name={visual.icon} size={38} color={foreground} />
       <Text style={{ color: foreground, fontSize: 10, fontWeight: '700', letterSpacing: 2 }}>{categoryLabels[category].toLocaleUpperCase()}</Text>
@@ -90,6 +93,7 @@ function CategoryArtwork({ category, height = 220, immersive = false }: { catego
 }
 
 export function PostCard({ post, detail = false, visible = true, preview = false, mediaOverrides, presentation = 'timeline', searchTerm = '' }: { post: Post; detail?: boolean; visible?: boolean; preview?: boolean; mediaOverrides?: Record<string, string>; presentation?: 'timeline' | 'card' | 'search'; searchTerm?: string }) {
+  const { colors, styles, scheme } = useTheme();
   const auth = useSession();
   const dialog = useDialog();
   const [menu, setMenu] = useState(false);
@@ -126,7 +130,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
   if (presentation === 'search' && !detail) {
     const snippet = searchSnippet(post.text, searchTerm);
     return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)}
-      style={({ pressed }) => ({ marginHorizontal: 16, marginTop: 8, marginBottom: 8, padding: 16, borderRadius: 22, backgroundColor: colors.white, boxShadow: '0 7px 24px #3232320D', gap: 10, opacity: pressed ? 0.65 : 1 })}>
+      style={({ pressed }) => ({ marginHorizontal: 16, marginTop: 8, marginBottom: 8, padding: 16, borderRadius: 22, backgroundColor: colors.surface, boxShadow: '0 7px 24px #3232320D', gap: 10, opacity: pressed ? 0.65 : 1 })}>
       <View style={[styles.row, { gap: 9 }]}>
         <Avatar media={post.group.logo} name={post.group.name} size={34} />
         <HighlightedText text={post.group.name} term={searchTerm} numberOfLines={1} style={{ flex: 1, color: colors.ink, fontSize: 13, fontWeight: '600' }} />
@@ -142,7 +146,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
     <Text numberOfLines={1} style={{ flexShrink: 1, color: inverted ? colors.white : colors.ink, fontSize: 13, fontWeight: '600' }}>{post.group.name}</Text>
   </Pressable>;
   const badge = (inverted = false, centered = false) => <View style={{ alignSelf: centered ? 'auto' : 'flex-start', minHeight: 23, justifyContent: 'center', paddingHorizontal: 9, borderRadius: 12, backgroundColor: inverted ? '#FFFFFFE8' : colors.primaryTint }}>
-    <Text style={{ color: colors.primary, fontSize: 9, lineHeight: 11, fontWeight: '700', letterSpacing: 0.2 }}>{categoryLabels[post.category]}</Text>
+    <Text style={{ color: inverted ? lightColors.primary : colors.primary, fontSize: 9, lineHeight: 11, fontWeight: '700', letterSpacing: 0.2 }}>{categoryLabels[post.category]}</Text>
   </View>;
   const footer = (inverted = false, compact = false) => <View style={[styles.between, { minHeight: 38 }]}>
     {dateLabel(relativeDate(post.publishedAt), inverted)}
@@ -156,7 +160,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
   </View>;
   const postMenu = <PostMenu visible={menu} onClose={() => setMenu(false)} onEdit={() => { setMenu(false); router.push({ pathname: '/compose', params: { postId: post.id } }); }} onDelete={() => void remove()} />;
 
-  if (presentation === 'card' && !detail && post.category === 'article') return <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 18, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.white, boxShadow: '0 8px 26px #32323210', opacity: deleting ? 0.55 : 1 }}>
+  if (presentation === 'card' && !detail && post.category === 'article') return <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 18, borderRadius: 28, overflow: 'hidden', backgroundColor: colors.surface, boxShadow: '0 8px 26px #32323210', opacity: deleting ? 0.55 : 1 }}>
     <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={({ pressed }) => ({ position: 'relative', backgroundColor: colors.paper, opacity: pressed ? 0.9 : 1 })}>
       {post.media.length ? <MediaGallery media={post.media} postId={post.id} visible={visible} overrides={mediaOverrides} interactive={false} radius={0} /> : <CategoryArtwork category={post.category} height={230} />}
       <LinearGradient pointerEvents="none" colors={['transparent', '#17201718', '#111811D9']} locations={[0.35, 0.62, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
@@ -169,7 +173,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
         {badge(true, true)}
       </View>
     </Pressable>
-    <View style={{ padding: 18, backgroundColor: colors.white, gap: 11 }}>
+    <View style={{ padding: 18, backgroundColor: colors.surface, gap: 11 }}>
       <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={({ pressed }) => ({ gap: 8, opacity: pressed ? 0.65 : 1 })}>
         <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: colors.yellow }} />
         {post.title ? <Text numberOfLines={2} style={{ color: colors.ink, fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.5 }}>{post.title}</Text> : null}
@@ -184,8 +188,8 @@ export function PostCard({ post, detail = false, visible = true, preview = false
     <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={({ pressed }) => ({ borderRadius: 28, overflow: 'hidden', backgroundColor: colors.primaryTint, transform: [{ rotate: atelierTilt }], opacity: pressed ? 0.82 : 1 })}>
       {post.media.length ? <MediaGallery media={post.media} postId={post.id} visible={visible} overrides={mediaOverrides} interactive={false} largeRadius fixedHeight={232} /> : <CategoryArtwork category={post.category} height={232} />}
     </Pressable>
-    <View style={{ marginTop: -28, borderRadius: 28, padding: 18, paddingTop: 16, backgroundColor: colors.white, boxShadow: '0 10px 28px #32323212', gap: 12 }}>
-      <View style={{ alignSelf: 'flex-start', marginTop: -34, padding: 6, paddingRight: 12, borderRadius: 22, backgroundColor: colors.white, boxShadow: '0 5px 16px #32323212' }}>{groupLine(false, 30)}</View>
+    <View style={{ marginTop: -28, borderRadius: 28, padding: 18, paddingTop: 16, backgroundColor: colors.surface, boxShadow: '0 10px 28px #32323212', gap: 12 }}>
+      <View style={{ alignSelf: 'flex-start', marginTop: -34, padding: 6, paddingRight: 12, borderRadius: 22, backgroundColor: colors.surface, boxShadow: '0 5px 16px #32323212' }}>{groupLine(false, 30)}</View>
       <View style={styles.between}>{badge()}<Icon name="tool" size={19} color={colors.primary} /></View>
       <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={{ gap: 6 }}>
         {post.title ? <Text numberOfLines={2} style={[styles.heading, { fontSize: 20 }]}>{post.title}</Text> : null}
@@ -196,7 +200,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
     {postMenu}
   </View>;
 
-  if (presentation === 'card' && !detail && post.category === 'installation') return <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 18, minHeight: 500, borderRadius: 30, overflow: 'hidden', backgroundColor: colors.green, boxShadow: '0 10px 30px #17351B22', opacity: deleting ? 0.55 : 1 }}>
+  if (presentation === 'card' && !detail && post.category === 'installation') return <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 18, minHeight: 500, borderRadius: 30, overflow: 'hidden', backgroundColor: colors.greenDeep, boxShadow: '0 10px 30px #17351B22', opacity: deleting ? 0.55 : 1 }}>
     <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
       {post.media.length ? <MediaGallery media={post.media} postId={post.id} visible={visible} overrides={mediaOverrides} interactive={false} largeRadius fixedHeight={500} cover /> : <CategoryArtwork category={post.category} height={500} immersive />}
     </Pressable>
@@ -205,7 +209,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
       androidRenderingMode="software"
       maskElement={<LinearGradient colors={['transparent', 'transparent', '#00000036', '#000000A8', '#000000']} locations={[0, 0.55, 0.68, 0.84, 1]} style={{ flex: 1 }} />}
       style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>
-      <BlurView intensity={52} tint="default" style={{ flex: 1 }} />
+      <BlurView intensity={52} tint={scheme === 'dark' ? 'dark' : 'default'} style={{ flex: 1 }} />
     </MaskedView>
     <LinearGradient pointerEvents="none" colors={['transparent', 'transparent', '#00000020', '#00000066', '#0000009E']} locations={[0, 0.54, 0.7, 0.86, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
     <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20, paddingTop: 24, gap: 10 }}>
@@ -219,7 +223,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
     {postMenu}
   </View>;
 
-  if (presentation === 'card' && !detail && post.category === 'jeux') return <View style={{ marginHorizontal: 16, marginTop: 11, marginBottom: 17, minHeight: 216, flexDirection: 'row', borderRadius: 27, overflow: 'hidden', backgroundColor: colors.white, boxShadow: '0 8px 26px #32323210', opacity: deleting ? 0.55 : 1 }}>
+  if (presentation === 'card' && !detail && post.category === 'jeux') return <View style={{ marginHorizontal: 16, marginTop: 11, marginBottom: 17, minHeight: 216, flexDirection: 'row', borderRadius: 27, overflow: 'hidden', backgroundColor: colors.surface, boxShadow: '0 8px 26px #32323210', opacity: deleting ? 0.55 : 1 }}>
     <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel={`Read ${post.title || 'post'}`} onPress={() => router.push(`/posts/${post.id}`)} style={({ pressed }) => ({ width: '38%', minHeight: 216, backgroundColor: colors.yellowTint, opacity: pressed ? 0.82 : 1 })}>
       {post.media.length ? <MediaGallery media={post.media} postId={post.id} visible={visible} overrides={mediaOverrides} interactive={false} fixedHeight={216} /> : <CategoryArtwork category={post.category} height={216} />}
     </Pressable>
@@ -234,7 +238,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
     </View>
     {postMenu}
   </View>;
-  return <View style={{ paddingHorizontal: 20, paddingTop: 21, paddingBottom: 14, backgroundColor: detail ? colors.canvas : colors.white, gap: 15, opacity: deleting ? 0.55 : 1 }}>
+  return <View style={{ paddingHorizontal: 20, paddingTop: 21, paddingBottom: 14, backgroundColor: detail ? colors.canvas : colors.surface, gap: 15, opacity: deleting ? 0.55 : 1 }}>
     <View style={[styles.row, { gap: 10 }]}>
       <Pressable disabled={preview} accessibilityRole="button" accessibilityLabel="Open group profile" onPress={() => openPostGroup(post.group.id)}><Avatar media={post.group.logo} name={post.group.name} /></Pressable>
       <Pressable disabled={preview} accessibilityRole="button" onPress={() => openPostGroup(post.group.id)} style={{ flex: 1, gap: 2 }}>
@@ -253,8 +257,9 @@ export function PostCard({ post, detail = false, visible = true, preview = false
 }
 
 function PostMenu({ visible, onClose, onEdit, onDelete }: { visible: boolean; onClose: () => void; onEdit: () => void; onDelete: () => void }) {
-  return <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}><View style={{ flex: 1, backgroundColor: '#20272055', justifyContent: 'flex-end', alignItems: 'center' }}>
-    <View accessibilityViewIsModal style={{ backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, width: '100%', maxWidth: 680, gap: 12 }}>
+  const { colors, styles } = useTheme();
+  return <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}><View style={{ flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end', alignItems: 'center' }}>
+    <View accessibilityViewIsModal style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, width: '100%', maxWidth: 680, gap: 12 }}>
       <Text style={styles.heading}>Manage post</Text>
       <Button title="Edit post" icon="edit-2" variant="secondary" onPress={onEdit} />
       <Button title="Delete post" icon="trash-2" variant="danger" onPress={onDelete} />
@@ -265,6 +270,7 @@ function PostMenu({ visible, onClose, onEdit, onDelete }: { visible: boolean; on
 
 export type FeedData = { posts: Post[]; page: { nextCursor: string | null; hasMore: boolean } };
 export function PostList({ query, header, emptyTitle, emptyBody, presentation = 'timeline', searchTerm = '' }: { query: UseInfiniteQueryResult<InfiniteData<FeedData>, Error>; header?: React.ReactElement; emptyTitle?: string; emptyBody?: string; presentation?: 'timeline' | 'card' | 'search'; searchTerm?: string }) {
+  const { colors, styles } = useTheme();
   const tabBarScroll = useTabBarScroll();
   const [visible, setVisible] = useState(new Set<string>());
   const viewability = useRef(({ viewableItems }: { viewableItems: { item: Post }[] }) => setVisible(new Set(viewableItems.map(item => item.item.id)))).current;
@@ -273,7 +279,7 @@ export function PostList({ query, header, emptyTitle, emptyBody, presentation = 
   return <FlatList data={posts} keyExtractor={post => post.id} extraData={visible} renderItem={({ item }) => <PostCard post={item} visible={visible.has(item.id)} presentation={presentation} searchTerm={searchTerm} />}
     {...tabBarScroll}
     onViewableItemsChanged={viewability} viewabilityConfig={viewabilityConfig}
-    ItemSeparatorComponent={presentation === 'card' ? () => <View style={{ height: 10, justifyContent: 'center' }}><LinearGradient colors={['transparent', '#32323216', 'transparent']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ height: 1, marginHorizontal: 46 }} /></View> : undefined}
+    ItemSeparatorComponent={presentation === 'card' ? () => <View style={{ height: 10, justifyContent: 'center' }}><LinearGradient colors={['transparent', colors.divider, 'transparent']} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ height: 1, marginHorizontal: 46 }} /></View> : undefined}
     ListHeaderComponent={header} style={presentation === 'card' || presentation === 'search' ? { backgroundColor: colors.canvas } : undefined} contentContainerStyle={{ flexGrow: 1, paddingBottom: Platform.OS === 'ios' ? 124 : presentation === 'card' || presentation === 'search' ? 28 : 36 }}
     refreshing={query.isRefetching && !query.isFetchingNextPage} onRefresh={() => { void query.refetch(); }}
     onEndReachedThreshold={0.4} onEndReached={() => { if (query.hasNextPage && !query.isFetching) void query.fetchNextPage(); }}
@@ -283,8 +289,9 @@ export function PostList({ query, header, emptyTitle, emptyBody, presentation = 
 }
 
 export function CreateButton() {
+  const { colors } = useTheme();
   const auth = useSession();
   if (auth.status !== 'group') return null;
   return <Pressable accessibilityRole="button" accessibilityLabel="Create post" onPress={() => router.push('/compose')}
-    style={{ position: 'absolute', bottom: 22, right: 22, width: 58, height: 58, backgroundColor: colors.primary, borderRadius: 29, justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 22px #CA373744' }}><Icon name="plus" color="white" size={26} /></Pressable>;
+    style={{ position: 'absolute', bottom: 22, right: 22, width: 58, height: 58, backgroundColor: colors.primary, borderRadius: 29, justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 22px #CA373744' }}><Icon name="plus" color={colors.white} size={26} /></Pressable>;
 }

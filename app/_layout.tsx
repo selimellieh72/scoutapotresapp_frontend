@@ -3,20 +3,24 @@ import { View } from "react-native"
 import { Stack } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { Providers } from "../src/providers"
-import { colors } from "../src/ui/theme"
+import { useTheme } from "../src/ui/theme"
 
-const BrandStripe = () => (
-  <View style={{ flexDirection: "row", height: 4 }}>
-    <View style={{ flex: 1, backgroundColor: colors.yellow }} />
-    <View style={{ flex: 1, backgroundColor: colors.brandGreen }} />
-    <View style={{ flex: 1, backgroundColor: colors.primary }} />
-  </View>
-)
-
-export default function RootLayout() {
+const BrandStripe = () => {
+  const { colors } = useTheme()
   return (
-    <Providers>
-      <StatusBar style="dark" />
+    <View style={{ flexDirection: "row", height: 4 }}>
+      <View style={{ flex: 1, backgroundColor: colors.yellow }} />
+      <View style={{ flex: 1, backgroundColor: colors.brandGreen }} />
+      <View style={{ flex: 1, backgroundColor: colors.primary }} />
+    </View>
+  )
+}
+
+function AppShell() {
+  const { colors, scheme } = useTheme()
+  return (
+    <>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <View
         style={{
           flex: 1,
@@ -34,6 +38,14 @@ export default function RootLayout() {
         />
         <BrandStripe />
       </View>
+    </>
+  )
+}
+
+export default function RootLayout() {
+  return (
+    <Providers>
+      <AppShell />
     </Providers>
   )
 }

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Empty, Header, Icon, Page, Skeleton } from '../ui/components';
-import { colors, styles } from '../ui/theme';
+import { useTheme } from '../ui/theme';
 import { useTabBarScroll } from '../ui/tabBarScroll';
 import { CategoryFilters, CreateButton, HighlightedText, PostList } from '../features/posts';
 import { useGroupById, useGroups, useMyPosts, usePosts, useSearch } from '../features/queries';
@@ -16,6 +16,7 @@ import type { Category, Group } from '../api/types';
 const openGroup = (group: Group) => router.push({ pathname: '/groups/[id]', params: { id: group.id } });
 
 export function HomeScreen() {
+  const { colors, styles } = useTheme();
   const insets = useSafeAreaInsets();
   const groups = useGroups();
   const posts = usePosts();
@@ -48,6 +49,7 @@ export function HomeScreen() {
 }
 
 function GroupGrid({ groups, searchTerm = '' }: { groups: Group[]; searchTerm?: string }) {
+  const { colors, styles } = useTheme();
   return <View style={{ padding: 20, paddingTop: 16, gap: 13 }}><Text style={styles.eyebrow}>GROUPS</Text>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
       {groups.map(group => <Pressable key={group.id} accessibilityRole="button" accessibilityLabel={`Open ${group.name}`} onPress={() => openGroup(group)}
@@ -60,6 +62,7 @@ function GroupGrid({ groups, searchTerm = '' }: { groups: Group[]; searchTerm?: 
 }
 
 export function SearchScreen() {
+  const { colors, styles, scheme } = useTheme();
   const tabBarScroll = useTabBarScroll();
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
@@ -73,7 +76,7 @@ export function SearchScreen() {
       <Icon name="search" size={18} color={colors.muted} />
       <TextInput accessibilityLabel="Search posts and groups" placeholder="Search the journal" placeholderTextColor={colors.muted}
         value={input} maxLength={200} onFocus={() => setSearchMode(true)} onChangeText={value => { setInput(value); setQuery(value.trim()); }}
-        returnKeyType="search" style={{ flex: 1, minHeight: 42, color: colors.ink, fontSize: 14 }} />
+        returnKeyType="search" keyboardAppearance={scheme} style={{ flex: 1, minHeight: 42, color: colors.ink, fontSize: 14 }} />
       {searchMode ? <Pressable accessibilityRole="button" accessibilityLabel="Close search" onPress={() => { setInput(''); setQuery(''); setSearchMode(false); Keyboard.dismiss(); }}
         style={{ minWidth: 32, minHeight: 42, justifyContent: 'center' }}><Icon name="x" size={18} /></Pressable> : null}
     </View></View>
@@ -86,6 +89,7 @@ export function SearchScreen() {
 }
 
 export function GroupScreen({ groupId }: { groupId?: string } = {}) {
+  const { colors, styles } = useTheme();
   const auth = useSession();
   const group = useGroupById(groupId);
   const data = group.data?.data;
@@ -97,7 +101,7 @@ export function GroupScreen({ groupId }: { groupId?: string } = {}) {
             <View style={{ alignItems: 'center', gap: 9 }}><Icon name="compass" size={44} color={colors.primary} /><Text style={[styles.eyebrow, { fontSize: 9 }]}>TOUJOURS PRÊTS</Text></View>}
         </View>
         <View style={{ padding: 24, paddingTop: 0, gap: 14 }}>
-          <View style={{ marginTop: -35, padding: 4, backgroundColor: 'white', borderRadius: 42, alignSelf: 'flex-start' }}><Avatar media={data.logo} name={data.name} size={72} /></View>
+          <View style={{ marginTop: -35, padding: 4, backgroundColor: colors.surface, borderRadius: 42, alignSelf: 'flex-start' }}><Avatar media={data.logo} name={data.name} size={72} /></View>
           <Text style={styles.title}>{data.name}</Text>
           {data.description ? <Text style={styles.body}>{data.description}</Text> : null}
           {auth.status === 'group' && auth.group?.id === data.id ? <Button title="Edit group profile" icon="edit-2" variant="secondary" onPress={() => router.push('/edit-group')} /> : null}

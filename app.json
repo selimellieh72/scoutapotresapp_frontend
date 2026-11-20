@@ -6,7 +6,7 @@
     "icon": "./assets/brand/app-icon.png",
     "scheme": "scoutapotres",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "org.scoutsdesapotres.app",
       "buildNumber": "1",

@@ -16,7 +16,7 @@ import {
   isGlassEffectAPIAvailable,
   isLiquidGlassAvailable,
 } from "expo-glass-effect"
-import { colors } from "./theme"
+import { useTheme } from "./theme"
 import { useTabBarState } from "./tabBarScroll"
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"]
@@ -45,6 +45,7 @@ export function BottomTabBar({
   navigateToTab,
   insets,
 }: BottomTabBarProps) {
+  const { colors } = useTheme()
   if (Platform.OS === "ios") {
     return (
       <IOSBottomTabBar
@@ -143,6 +144,8 @@ function IOSBottomTabBar({
   navigateToTab,
   insets,
 }: BottomTabBarProps) {
+  const { colors, scheme } = useTheme()
+  const dark = scheme === "dark"
   const { width: screenWidth } = useWindowDimensions()
   const { collapsed, setCollapsed } = useTabBarState()
   const progress = useRef(new Animated.Value(0)).current
@@ -235,23 +238,29 @@ function IOSBottomTabBar({
           borderCurve: "continuous",
           overflow: "hidden",
           backgroundColor: glassAvailable
-            ? "rgba(255,255,255,0.06)"
+            ? dark
+              ? "rgba(28,29,27,0.18)"
+              : "rgba(255,255,255,0.06)"
             : reduceTransparency
-              ? "rgba(250,249,247,0.98)"
-              : "rgba(250,249,247,0.82)",
+              ? dark
+                ? "rgba(27,28,26,0.98)"
+                : "rgba(250,249,247,0.98)"
+              : dark
+                ? "rgba(27,28,26,0.86)"
+                : "rgba(250,249,247,0.82)",
           boxShadow: "0 10px 30px #1D231C24",
           transform: [{ translateY: verticalShift }],
         }}>
         {glassAvailable ? (
           <GlassView
-            colorScheme="light"
+            colorScheme={scheme}
             glassEffectStyle={{
               style: collapsed ? "clear" : "regular",
               animate: !reduceMotion,
               animationDuration: collapsed ? 0.62 : 0.56,
             }}
             isInteractive
-            tintColor="rgba(255,255,255,0.14)"
+            tintColor={dark ? "rgba(28,29,27,0.24)" : "rgba(255,255,255,0.14)"}
             pointerEvents="none"
             style={StyleSheet.absoluteFill}
           />

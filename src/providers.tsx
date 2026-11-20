@@ -8,6 +8,7 @@ import { SessionManager, type SecretStorage } from './auth/session';
 import { ApiClient } from './api/client';
 import { http } from './config';
 import { DialogProvider } from './ui/dialog';
+import { ThemeProvider } from './ui/theme';
 
 let webSession: string | null = null;
 const storage: SecretStorage = Platform.OS === 'web' ? {
@@ -30,9 +31,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const claim = useCallback((id: string) => setActive(id), []);
   useEffect(() => { void session.restore(); void AsyncStorage.getItem('scout.autoplay').then(value => updateAutoplay(value === 'true')).catch(() => {}); }, []);
   const setAutoplay = (value: boolean) => { updateAutoplay(value); void AsyncStorage.setItem('scout.autoplay', String(value)).catch(() => {}); };
-  return <SafeAreaProvider><QueryClientProvider client={queryClient}>
+  return <SafeAreaProvider><ThemeProvider><QueryClientProvider client={queryClient}>
     <Preferences.Provider value={{ autoplay, setAutoplay }}><Playback.Provider value={{ active, claim }}>
       <DialogProvider>{children}</DialogProvider>
     </Playback.Provider></Preferences.Provider>
-  </QueryClientProvider></SafeAreaProvider>;
+  </QueryClientProvider></ThemeProvider></SafeAreaProvider>;
 }

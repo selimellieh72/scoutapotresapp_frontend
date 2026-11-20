@@ -62,10 +62,10 @@ export function Empty({ title = copy.emptyTitle, message = copy.emptyBody, retry
 export function Skeleton() { return <View accessibilityLabel="Loading posts" style={{ padding: 20, gap: 18 }}>
   {[1, 2, 3].map(i => <View key={i} style={{ gap: 12, paddingBottom: 28 }}><View style={styles.row}><View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: colors.line }} /><View style={{ width: '55%', height: 15, borderRadius: 4, backgroundColor: colors.line }} /></View><View style={{ height: 12, width: '95%', backgroundColor: colors.paper }} /><View style={{ height: 12, width: '70%', backgroundColor: colors.paper }} /></View>)}
   </View>; }
-export function AdminGate({ children }: { children: React.ReactNode }) {
+export function GroupGate({ children }: { children: React.ReactNode }) {
   const auth = useSession();
-  if (auth.status === 'restoring') return <Page><Header back title="Admin access" /><Skeleton /></Page>;
-  if (auth.status !== 'admin') return <Page><Header back title="Admin access" /><Empty title="A place for the group’s admins" message="Sign in to publish updates and manage the journal." icon="lock" /><View style={{ padding: 24 }}><Button title="Admin login" onPress={() => router.push('/login')} /></View></Page>;
+  if (auth.status === 'restoring') return <Page><Header back title="Group access" /><Skeleton /></Page>;
+  if (auth.status !== 'group') return <Page><Header back title="Group access" /><Empty title="Sign in as your group" message="Group accounts can publish and manage their own posts." icon="lock" /><View style={{ padding: 24 }}><Button title="Group login" onPress={() => router.push('/login')} /></View></Page>;
   return children;
 }
 export function Chips<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (value: T) => void }) {

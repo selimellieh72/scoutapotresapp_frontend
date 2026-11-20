@@ -1,121 +1,60 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { api } from "../providers"
-import type { Filters } from "../api/types"
-import {
-  demoGroups,
-  filterDemoGroups,
-  filterDemoPosts,
-  findDemoGroup,
-  findDemoPost,
-  isDemoGroup,
-} from "../demo/content"
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { api } from '../providers';
+import type { Filters } from '../api/types';
 
-const endPage = { nextCursor: null, hasMore: false }
-
-type PostQueryOptions = {
-  groupId?: string
-  includeDemo?: boolean
-}
-
-export function usePosts(
-  filters: Filters = {},
-  { groupId, includeDemo = true }: PostQueryOptions = {},
-) {
+export function usePosts(filters: Filters = {}) {
   return useInfiniteQuery({
-    queryKey: ["posts", filters, groupId, includeDemo],
+    queryKey: ['posts', filters],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
-      const demos = includeDemo && !pageParam
-        ? filterDemoPosts(filters, groupId)
-        : []
-
-      if (groupId && isDemoGroup(groupId)) {
-        return { posts: demos, page: endPage }
-      }
-
-      try {
-        const result = await api.posts(filters, pageParam, signal)
-        return { posts: [...result.data, ...demos], page: result.page }
-      } catch (error) {
-        if (demos.length) return { posts: demos, page: endPage }
-        throw error
-      }
+      const result = await api.posts(filters, pageParam, signal);
+      return { posts: result.data, page: result.page };
     },
-    getNextPageParam: last => last.page.hasMore
-      ? last.page.nextCursor ?? undefined
-      : undefined,
-  })
+    getNextPageParam: last => last.page.hasMore ? last.page.nextCursor ?? undefined : undefined,
+  });
 }
 
-export const useGroup = () => useQuery({
-  queryKey: ["group"],
-  queryFn: ({ signal }) => api.group(signal),
-})
+export function useMyPosts(filters: Filters = {}) {
+  return useInfiniteQuery({
+    queryKey: ['my-posts', filters],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const result = await api.myPosts(filters, pageParam, signal);
+      return { posts: result.data, page: result.page };
+    },
+    getNextPageParam: last => last.page.hasMore ? last.page.nextCursor ?? undefined : undefined,
+  });
+}
 
 export const useGroups = () => useQuery({
-  queryKey: ["groups"],
-  queryFn: async ({ signal }) => {
-    try {
-      const result = await api.group(signal)
-      return [result.data, ...demoGroups]
-    } catch {
-      return demoGroups
-    }
-  },
-})
+  queryKey: ['groups'],
+  queryFn: ({ signal }) => api.groups(signal).then(result => result.data),
+});
 
 export const useGroupById = (id?: string) => useQuery({
-  queryKey: ["group", id],
-  queryFn: async ({ signal }) => {
-    const demo = findDemoGroup(id)
-    if (demo) return { data: demo }
-    return api.group(signal)
-  },
-})
+  queryKey: ['group', id],
+  queryFn: ({ signal }) => api.group(id!, signal),
+  enabled: Boolean(id && /^[a-f0-9]{24}$/i.test(id)),
+});
 
 export const usePost = (id: string) => useQuery({
-  queryKey: ["post", id],
-  queryFn: ({ signal }) => {
-    const demo = findDemoPost(id)
-    return demo ? Promise.resolve({ data: demo }) : api.post(id, signal)
-  },
+  queryKey: ['post', id],
+  queryFn: ({ signal }) => api.post(id, signal),
   enabled: /^[a-f0-9]{24}$/i.test(id),
-})
+});
 
 export function useSearch(filters: Filters) {
-  const searching = Boolean(filters.q && filters.q.length >= 2)
+  const searching = Boolean(filters.q && filters.q.length >= 2);
   return useInfiniteQuery({
-    queryKey: [searching ? "search" : "discover", filters],
+    queryKey: [searching ? 'search' : 'discover', filters],
     initialPageParam: undefined as string | undefined,
     enabled: !filters.q || searching,
     queryFn: async ({ pageParam, signal }) => {
-      const demoPosts = pageParam ? [] : filterDemoPosts(filters)
-      const groups = pageParam ? [] : filterDemoGroups(filters)
-
-      try {
-        if (searching) {
-          const result = await api.search(filters, pageParam, signal)
-          return {
-            posts: [...result.data.posts, ...demoPosts],
-            groups: [...result.data.groups, ...groups],
-            page: result.page,
-          }
-        }
-        const result = await api.discover(filters, pageParam, signal)
-        return {
-          posts: [...result.data.posts, ...demoPosts],
-          groups: [result.data.group, ...groups],
-          page: result.page,
-        }
-      } catch (error) {
-        if (!pageParam && (demoPosts.length || groups.length)) {
-          return { posts: demoPosts, groups, page: endPage }
-        }
-        throw error
-      }
+      const result = searching
+        ? await api.search(filters, pageParam, signal)
+        : await api.discover(filters, pageParam, signal);
+      return { posts: result.data.posts, groups: pageParam ? [] : result.data.groups, page: result.page };
     },
-    getNextPageParam: last => last.page.hasMore
-      ? last.page.nextCursor ?? undefined
-      : undefined,
-  })
+    getNextPageParam: last => last.page.hasMore ? last.page.nextCursor ?? undefined : undefined,
+  });
 }

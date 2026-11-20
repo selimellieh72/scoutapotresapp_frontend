@@ -1,13 +1,13 @@
-import { adminSchema, dataSchema, sessionSchema, type Admin, type SessionBundle } from '../api/types';
+import { accountSchema, dataSchema, sessionSchema, type GroupAccount, type SessionBundle } from '../api/types';
 import { ApiError, cancelled, HttpClient, parseResponse, type RequestOptions } from '../api/http';
 
 export interface SecretStorage { get(): Promise<string | null>; set(value: string): Promise<void>; clear(): Promise<void> }
-export type SessionState = { status: 'restoring' | 'guest' | 'admin' | 'unverified'; admin: Admin | null; generation: number };
+export type SessionState = { status: 'restoring' | 'guest' | 'group' | 'unverified'; group: GroupAccount | null; generation: number };
 
 export class SessionManager {
   private bundle: SessionBundle | null = null;
   private generation = 0;
-  private state: SessionState = { status: 'restoring', admin: null, generation: 0 };
+  private state: SessionState = { status: 'restoring', group: null, generation: 0 };
   private listeners = new Set<() => void>();
   private refreshFlight: Promise<SessionBundle> | null = null;
   private restoreFlight: Promise<void> | null = null;
@@ -16,7 +16,7 @@ export class SessionManager {
   snapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   private emit(status: SessionState['status']) {
-    this.state = { status, admin: status === 'admin' ? this.bundle?.admin ?? null : null, generation: this.generation };
+    this.state = { status, group: status === 'group' ? this.bundle?.group ?? null : null, generation: this.generation };
     this.listeners.forEach(listener => listener());
   }
   private store(operation: () => Promise<void>) {
@@ -28,7 +28,7 @@ export class SessionManager {
       if (generation !== this.generation) throw cancelled();
       await this.storage.set(JSON.stringify(bundle));
       if (generation !== this.generation) throw cancelled();
-      this.bundle = bundle; this.emit('admin');
+      this.bundle = bundle; this.emit('group');
     });
     return bundle;
   }
@@ -52,8 +52,8 @@ export class SessionManager {
       if (!parsed.success || Date.parse(parsed.data.sessionExpiresAt) <= Date.now()) { await this.invalidate(); return; }
       this.bundle = parsed.data;
       if (Date.parse(parsed.data.accessExpiresAt) <= Date.now() + 30_000) { await this.refresh(); return; }
-      const me = parseResponse(dataSchema(adminSchema), await this.http.request('/me', { token: parsed.data.accessToken })).data;
-      await this.accept({ ...parsed.data, admin: me }, generation);
+      const me = parseResponse(dataSchema(accountSchema), await this.http.request('/me', { token: parsed.data.accessToken })).data;
+      await this.accept({ ...parsed.data, group: me }, generation);
     } catch (error) {
       if (generation !== this.generation) return;
       if (error instanceof ApiError && error.status === 401 && this.bundle) {
@@ -77,7 +77,6 @@ export class SessionManager {
         const bundle = parseResponse(dataSchema(sessionSchema), await this.http.request('/auth/refresh', { method: 'POST', body: { refreshToken: old.refreshToken } })).data;
         return await this.accept(bundle, generation);
       } catch (error) {
-        // A lost refresh response may already have rotated its token; do not replay it.
         if (generation === this.generation) await this.invalidate();
         throw error;
       }
@@ -85,7 +84,7 @@ export class SessionManager {
     return this.refreshFlight;
   }
   async authenticated(path: string, options: RequestOptions = {}) {
-    if (this.state.status !== 'admin' || !this.bundle) throw cancelled();
+    if (this.state.status !== 'group' || !this.bundle) throw cancelled();
     const generation = this.generation;
     let token = this.bundle.accessToken;
     if (Date.parse(this.bundle.accessExpiresAt) <= Date.now() + 30_000) token = (await this.refresh()).accessToken;

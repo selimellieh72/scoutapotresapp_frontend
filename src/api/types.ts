@@ -13,18 +13,16 @@ export const postSchema = z.object({ id: idSchema, group: groupIdentitySchema, c
   title: z.string(), text: z.string(), media: z.array(mediaSchema), publishedAt: z.string(), updatedAt: z.string() });
 export const pageSchema = z.object({ nextCursor: z.string().nullable(), hasMore: z.boolean() });
 export const postsSchema = z.object({ data: z.array(postSchema), page: pageSchema });
-export const discoverSchema = z.object({ data: z.object({ group: groupSchema, posts: z.array(postSchema) }), page: pageSchema });
+export const discoverSchema = z.object({ data: z.object({ groups: z.array(groupSchema), posts: z.array(postSchema) }), page: pageSchema });
 export const searchSchema = z.object({ data: z.object({ groups: z.array(groupSchema), posts: z.array(postSchema) }), page: pageSchema });
-export const adminSchema = z.object({ id: idSchema, email: z.string(), username: z.string().nullable(),
-  displayName: z.string(), role: z.literal('admin'), status: z.literal('active') });
+export const accountSchema = z.object({ id: idSchema, email: z.string(), username: z.string(),
+  name: z.string(), status: z.literal('active') });
 export const sessionSchema = z.object({ accessToken: z.string(), refreshToken: z.string(),
-  accessExpiresAt: z.iso.datetime(), sessionExpiresAt: z.iso.datetime(), admin: adminSchema });
-export const infoSchema = z.object({ about: z.string(), contactEmail: z.string().nullable(),
-  privacyPolicyUrl: z.string().nullable(), supportedLanguages: z.array(z.string()) });
+  accessExpiresAt: z.iso.datetime(), sessionExpiresAt: z.iso.datetime(), group: accountSchema });
 export type Media = z.infer<typeof mediaSchema>;
 export type Post = z.infer<typeof postSchema>;
 export type Group = z.infer<typeof groupSchema>;
-export type Admin = z.infer<typeof adminSchema>;
+export type GroupAccount = z.infer<typeof accountSchema>;
 export type SessionBundle = z.infer<typeof sessionSchema>;
 export type Filters = { category?: Category; contentType?: 'text' | 'image' | 'video'; q?: string };
 export type Page = z.infer<typeof pageSchema>;

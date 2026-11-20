@@ -17,7 +17,6 @@ import { copy } from '../copy';
 import { colors, styles } from '../ui/theme';
 import { useTabBarScroll } from '../ui/tabBarScroll';
 import { MediaGallery } from './media';
-import { isDemoGroup } from '../demo/content';
 
 // The package's class declaration predates React 19's JSX constructor types.
 // Its runtime API is still compatible, so expose it through a modern component type.
@@ -26,10 +25,7 @@ const MaskedView = NativeMaskedView as unknown as React.ComponentType<ViewProps 
   androidRenderingMode?: 'software' | 'hardware';
 }>;
 
-const openPostGroup = (id: string) => {
-  if (isDemoGroup(id)) router.push({ pathname: '/groups/[id]', params: { id } });
-  else router.push('/group');
-};
+const openPostGroup = (id: string) => router.push({ pathname: '/groups/[id]', params: { id } });
 
 export function CategoryFilters({ value, onChange, includeAll = true, presentation = 'chips' }: { value?: Category; onChange: (value?: Category) => void; includeAll?: boolean; presentation?: 'chips' | 'strip' }) {
   const options = [...(includeAll ? [{ value: '', label: 'All' }] : []), ...categories.map(value => ({ value, label: categoryLabels[value] }))];
@@ -98,7 +94,7 @@ export function PostCard({ post, detail = false, visible = true, preview = false
   const dialog = useDialog();
   const [menu, setMenu] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const canManage = auth.status === 'admin' && !isDemoGroup(post.group.id);
+  const canManage = auth.status === 'group' && auth.group?.id === post.group.id;
   const atelierTilt = useMemo(() => {
     const hash = [...post.id].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) | 0, 0);
     return `${((Math.abs(hash) % 49) - 24) / 10}deg`;
@@ -288,7 +284,7 @@ export function PostList({ query, header, emptyTitle, emptyBody, presentation = 
 
 export function CreateButton() {
   const auth = useSession();
-  if (auth.status !== 'admin') return null;
+  if (auth.status !== 'group') return null;
   return <Pressable accessibilityRole="button" accessibilityLabel="Create post" onPress={() => router.push('/compose')}
     style={{ position: 'absolute', bottom: 22, right: 22, width: 58, height: 58, backgroundColor: colors.primary, borderRadius: 29, justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 22px #CA373744' }}><Icon name="plus" color="white" size={26} /></Pressable>;
 }

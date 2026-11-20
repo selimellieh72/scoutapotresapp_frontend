@@ -12,12 +12,12 @@ import { DialogProvider } from './ui/dialog';
 let webSession: string | null = null;
 const storage: SecretStorage = Platform.OS === 'web' ? {
   get: async () => webSession, set: async value => { webSession = value; }, clear: async () => { webSession = null; },
-} : { get: () => SecureStore.getItemAsync('scout.admin.session'),
-  set: value => SecureStore.setItemAsync('scout.admin.session', value), clear: () => SecureStore.deleteItemAsync('scout.admin.session') };
+} : { get: () => SecureStore.getItemAsync('scout.group.session'),
+  set: value => SecureStore.setItemAsync('scout.group.session', value), clear: () => SecureStore.deleteItemAsync('scout.group.session') };
 export const session = new SessionManager(http, storage);
 export const api = new ApiClient(http, session);
 export const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000 }, mutations: { retry: false } } });
-export const invalidateContent = () => queryClient.invalidateQueries({ predicate: query => ['posts', 'post', 'group', 'groups', 'search', 'discover'].includes(String(query.queryKey[0])) });
+export const invalidateContent = () => queryClient.invalidateQueries({ predicate: query => ['posts', 'my-posts', 'post', 'group', 'groups', 'search', 'discover'].includes(String(query.queryKey[0])) });
 export function useSession() { return useSyncExternalStore(session.subscribe, session.snapshot, session.snapshot); }
 const Preferences = createContext({ autoplay: false, setAutoplay: (_value: boolean) => {} });
 const Playback = createContext({ active: null as string | null, claim: (_id: string) => {} });

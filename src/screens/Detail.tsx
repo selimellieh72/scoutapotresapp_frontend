@@ -13,7 +13,6 @@ import { http } from '../config';
 import { Avatar, Empty, Header, Icon, IconButton, Page, Skeleton } from '../ui/components';
 import { colors, styles } from '../ui/theme';
 import { categoryLabels, type Post } from '../api/types';
-import { isDemoGroup } from '../demo/content';
 
 const detailDate = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -31,9 +30,7 @@ function PostDetailContent({ post }: { post: Post }) {
     return { likes: 28 + (seed % 61), comments: 4 + (seed % 13) };
   }, [post]);
   const media = post.media[0];
-  const openGroup = () => isDemoGroup(post.group.id)
-    ? router.push({ pathname: '/groups/[id]', params: { id: post.group.id } })
-    : router.push('/group');
+  const openGroup = () => router.push({ pathname: '/groups/[id]', params: { id: post.group.id } });
   const share = () => void Share.share({ title: post.title || post.group.name, message: `${post.title}\n\n${post.text}`.trim() });
   const goBack = () => router.canGoBack() ? router.back() : router.replace('/');
   const top = Platform.OS === 'ios' ? insets.top + 12 : 14;

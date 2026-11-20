@@ -5,8 +5,8 @@ import { SessionManager, type SecretStorage } from '../src/auth/session';
 import type { SessionBundle } from '../src/api/types';
 import { uniquePosts, validateFile, validatePost } from '../src/domain/validation';
 
-const admin = { id: '123456789012345678901234', email: 'test@example.test', username: 'test', displayName: 'Test admin', role: 'admin' as const, status: 'active' as const };
-const bundle = (suffix = 'one', expired = false): SessionBundle => ({ accessToken: `access-${suffix}`, refreshToken: `refresh-${suffix}`, admin,
+const group = { id: '123456789012345678901234', email: 'test@example.test', username: 'test', name: 'Test group', status: 'active' as const };
+const bundle = (suffix = 'one', expired = false): SessionBundle => ({ accessToken: `access-${suffix}`, refreshToken: `refresh-${suffix}`, group,
   accessExpiresAt: new Date(Date.now() + (expired ? -1000 : 15 * 60_000)).toISOString(), sessionExpiresAt: new Date(Date.now() + 24 * 60 * 60_000).toISOString() });
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 const unauthorized = () => json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required.' } }, 401);
@@ -33,7 +33,7 @@ describe('HTTP and public content', () => {
     expect(() => http.mediaUrl('https://evil.example/api/v1/media/a/file')).toThrow('Untrusted media URL');
     expect(() => new HttpClient('https://user:password@api.example.test')).toThrow();
   });
-  it('omits admin credentials from public reads even after login', async () => {
+  it('omits group credentials from public reads even after login', async () => {
     const fetcher = vi.fn<Fetcher>(async (url, options) => path(url).endsWith('/login') ? json({ data: bundle() }) : json({ data: [], page: { nextCursor: null, hasMore: false } }));
     const { session, api } = setup(fetcher);
     await session.login('test', 'password');
@@ -72,14 +72,14 @@ describe('HTTP and public content', () => {
   });
 });
 
-describe('admin session lifecycle', () => {
+describe('group session lifecycle', () => {
   it('restores active sessions through /me and stores the complete bundle', async () => {
     const storage = memory(bundle());
-    const fetcher = vi.fn<Fetcher>(async () => json({ data: admin }));
+    const fetcher = vi.fn<Fetcher>(async () => json({ data: group }));
     const { session } = setup(fetcher, storage);
     expect(session.snapshot().status).toBe('restoring');
     await session.restore();
-    expect(session.snapshot()).toMatchObject({ status: 'admin', admin });
+    expect(session.snapshot()).toMatchObject({ status: 'group', group });
     expect(JSON.parse(storage.value()!)).toHaveProperty('refreshToken', 'refresh-one');
   });
   it('allows guest browsing immediately and clears corrupt stored sessions', async () => {
@@ -102,18 +102,18 @@ describe('admin session lifecycle', () => {
       if (path(url).endsWith('/refresh')) { refreshes++; expect(options?.headers).not.toHaveProperty('Authorization'); await new Promise(resolve => setTimeout(resolve, 10)); return json({ data: bundle('two') }); }
       const token = (options?.headers as Record<string, string>).Authorization;
       if (token === 'Bearer access-one') return unauthorized();
-      expect(JSON.parse(storage.value()!).refreshToken).toBe('refresh-two'); return json({ data: admin });
+      expect(JSON.parse(storage.value()!).refreshToken).toBe('refresh-two'); return json({ data: group });
     });
     const { session } = setup(fetcher, storage); await session.login('test', 'password');
     await Promise.all([1, 2, 3].map(() => session.authenticated('/me')));
-    expect(refreshes).toBe(1); expect(session.snapshot().status).toBe('admin');
+    expect(refreshes).toBe(1); expect(session.snapshot().status).toBe('group');
   });
   it('refreshes expiring access once before sending parallel protected requests', async () => {
     let refreshes = 0;
     const fetcher = vi.fn<Fetcher>(async url => {
       if (path(url).endsWith('/login')) return json({ data: bundle('one', true) });
       if (path(url).endsWith('/refresh')) { refreshes++; return json({ data: bundle('two') }); }
-      return json({ data: admin });
+      return json({ data: group });
     });
     const { session } = setup(fetcher); await session.login('test', 'password');
     await Promise.all([session.authenticated('/me'), session.authenticated('/me')]); expect(refreshes).toBe(1);
@@ -147,7 +147,7 @@ describe('admin session lifecycle', () => {
     await expect(pending).rejects.toMatchObject({ code: 'SESSION_CHANGED' });
     expect(session.snapshot().status).toBe('guest'); expect(storage.value()).toBeNull();
   });
-  it('serializes logout with refresh and never restores old admin state', async () => {
+  it('serializes logout with refresh and never restores old group state', async () => {
     let resolve!: (value: Response) => void;
     const gate = new Promise<Response>(done => { resolve = done; });
     const fetcher = vi.fn<Fetcher>(async url => {
@@ -164,18 +164,18 @@ describe('admin session lifecycle', () => {
 });
 
 describe('content validation', () => {
-  it('accepts text/media posts and rejects empty, oversized, or duplicate content', () => {
+  it('accepts text or one-image posts and rejects empty, oversized, or multi-image content', () => {
     const empty = { category: 'article' as const, title: 'Title only', text: '', mediaIds: [] };
     expect(validatePost(empty)).toBeTruthy();
     expect(validatePost({ ...empty, text: 'A story' })).toBeNull();
     expect(validatePost({ ...empty, mediaIds: ['a'] })).toBeNull();
-    expect(validatePost({ ...empty, mediaIds: ['a', 'a'] })).toBeTruthy();
+    expect(validatePost({ ...empty, mediaIds: ['a', 'b'] })).toBe('Choose only one post image.');
     expect(validatePost({ ...empty, text: 'a'.repeat(20_001) })).toBeTruthy();
     expect(validatePost({ ...empty, text: 'story', title: 'a'.repeat(201) })).toBeTruthy();
   });
-  it('enforces image/video input limits without accepting renamed unsupported formats', () => {
-    expect(validateFile('image/jpeg', 1024)).toBeNull(); expect(validateFile('video/mp4', 1024)).toBeNull();
-    expect(validateFile('image/png', 11 * 1024 * 1024)).toBeTruthy(); expect(validateFile('video/mp4', 101 * 1024 * 1024)).toBeTruthy();
+  it('enforces image-only input limits without accepting unsupported formats', () => {
+    expect(validateFile('image/jpeg', 1024)).toBeNull(); expect(validateFile('video/mp4', 1024)).toBeTruthy();
+    expect(validateFile('image/png', 11 * 1024 * 1024)).toBeTruthy();
     expect(validateFile('video/quicktime')).toBeTruthy(); expect(validateFile('text/plain')).toBeTruthy();
   });
   it('deduplicates cursor pages by ID while preserving their order', () => {

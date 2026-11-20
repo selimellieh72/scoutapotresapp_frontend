@@ -3,7 +3,7 @@ import { Linking, Modal, ScrollView, Text, View } from "react-native"
 import { Image } from "expo-image"
 import { router, useLocalSearchParams } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
-import { api, invalidateContent } from "../providers"
+import { api, invalidateContent, useSession } from "../providers"
 import { ApiError, userMessage } from "../api/http"
 import {
   categoryLabels,
@@ -11,12 +11,12 @@ import {
   type Media,
   type Post,
 } from "../api/types"
-import { useGroup } from "../features/queries"
+import { useGroupById } from "../features/queries"
 import { CategoryFilters, PostCard } from "../features/posts"
 import {
   cleanupAttachments,
   existingAttachment,
-  pickAttachments,
+  pickImage,
   uploadAttachment,
   type Attachment,
 } from "../features/attachments"
@@ -47,7 +47,8 @@ export function ComposerScreen() {
     refetchOnMount: "always",
     queryFn: () => api.post(postId!),
   })
-  const group = useGroup()
+  const auth = useSession()
+  const group = useGroupById(auth.group?.id)
   const [category, setCategory] = useState<Category>("article")
   const [title, setTitle] = useState("")
   const [text, setText] = useState("")
@@ -78,7 +79,10 @@ export function ComposerScreen() {
       !initialized.current
     ) {
       const post = existing.data.data
-      const attachments = post.media.map(existingAttachment)
+      const attachments = post.media
+        .filter((media) => media.type === "image")
+        .slice(0, 1)
+        .map(existingAttachment)
       setCategory(post.category)
       setTitle(post.title)
       setText(post.text)
@@ -103,8 +107,11 @@ export function ComposerScreen() {
   const add = async () => {
     setError("")
     try {
-      const selected = await pickAttachments(10 - items.length)
-      setItems((value) => [...value, ...selected])
+      const selected = await pickImage()
+      if (selected) {
+        void cleanupAttachments(items)
+        setItems([selected])
+      }
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -117,13 +124,6 @@ export function ComposerScreen() {
     const removed = items[index]
     setItems(items.filter((_item, position) => position !== index))
     if (removed) void cleanupAttachments([removed])
-  }
-  const move = (index: number, offset: number) => {
-    const next = [...items]
-    const target = index + offset
-    if (target < 0 || target >= next.length) return
-    ;[next[index], next[target]] = [next[target]!, next[index]!]
-    setItems(next)
   }
   const input = {
     category,
@@ -143,6 +143,7 @@ export function ComposerScreen() {
     setError("")
     setAmbiguous(false)
     const working = [...items]
+    let publicationStarted = false
     try {
       for (let index = 0; index < working.length; index++) {
         const attachment = working[index]!
@@ -162,6 +163,7 @@ export function ComposerScreen() {
         ...input,
         mediaIds: working.map((item) => item.media!.id),
       }
+      publicationStarted = true
       const result = postId
         ? await api.editPost(postId, body)
         : await api.createPost(body)
@@ -169,10 +171,10 @@ export function ComposerScreen() {
       void invalidateContent()
     } catch (caught) {
       if (caught instanceof ApiError && caught.ambiguous) {
-        setAmbiguous(true)
-        setError(
-          "We couldn’t confirm the result. Check Group posts before publishing again. Your text is still here.",
-        )
+        setAmbiguous(publicationStarted)
+        setError(publicationStarted
+          ? "We couldn’t confirm the result. Check your posts before publishing again. Your text is still here."
+          : "We couldn’t upload the image. Nothing was published, and your text is still here. Please try again.")
       } else
         setError(
           caught instanceof ApiError
@@ -284,8 +286,8 @@ export function ComposerScreen() {
         </View>
         <View style={{ gap: 10 }}>
           <View style={styles.between}>
-            <Text style={styles.label}>Photos & videos</Text>
-            <Text style={styles.muted}>{items.length} / 10</Text>
+            <Text style={styles.label}>Post image</Text>
+            <Text style={styles.muted}>{items.length} / 1</Text>
           </View>
           {items.map((item, index) => (
             <View
@@ -295,18 +297,12 @@ export function ComposerScreen() {
                 styles.row,
                 { padding: 10, gap: 8 },
               ]}>
-              {item.type === "image" ? (
-                <Image
-                  source={item.uri}
-                  style={{ width: 54, height: 54, borderRadius: 8 }}
-                  contentFit="cover"
-                  accessibilityLabel={`Attachment ${index + 1}`}
-                />
-              ) : (
-                <View style={{ width: 54 }}>
-                  <Text style={styles.eyebrow}>VIDEO</Text>
-                </View>
-              )}
+              <Image
+                source={item.uri}
+                style={{ width: 54, height: 54, borderRadius: 8 }}
+                contentFit="cover"
+                accessibilityLabel="Selected post image"
+              />
               <View style={{ flex: 1 }}>
                 <Text
                   numberOfLines={1}
@@ -324,30 +320,18 @@ export function ComposerScreen() {
                 </Text>
               </View>
               <IconButton
-                icon="arrow-up"
-                label={`Move attachment ${index + 1} earlier`}
-                disabled={busy || index === 0}
-                onPress={() => move(index, -1)}
-              />
-              <IconButton
-                icon="arrow-down"
-                label={`Move attachment ${index + 1} later`}
-                disabled={busy || index === items.length - 1}
-                onPress={() => move(index, 1)}
-              />
-              <IconButton
                 icon="x"
-                label={`Remove attachment ${index + 1}`}
+                label="Remove post image"
                 disabled={busy}
                 onPress={() => remove(index)}
               />
             </View>
           ))}
           <Button
-            title="Add photos or videos"
+            title={items.length ? "Replace image" : "Choose image"}
             icon="image"
             variant="secondary"
-            disabled={busy || items.length >= 10}
+            disabled={busy}
             onPress={() => void add()}
           />
         </View>

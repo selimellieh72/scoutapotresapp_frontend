@@ -32,9 +32,9 @@ const tabs: Record<
     inactive: "compass-outline",
   },
   settings: {
-    label: "Settings",
-    active: "cog",
-    inactive: "cog-outline",
+    label: "Profile",
+    active: "account-circle",
+    inactive: "account-circle-outline",
   },
 }
 

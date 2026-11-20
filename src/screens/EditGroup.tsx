@@ -2,17 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useGroup } from '../features/queries';
-import { cleanupAttachments, pickAttachments, uploadAttachment, type Attachment } from '../features/attachments';
+import { useGroupById } from '../features/queries';
+import { cleanupAttachments, pickImage, uploadAttachment, type Attachment } from '../features/attachments';
 import { useDiscardGuard } from '../features/form';
-import { api, invalidateContent } from '../providers';
+import { api, invalidateContent, useSession } from '../providers';
 import { ApiError, userMessage } from '../api/http';
 import { http } from '../config';
 import { Button, Empty, Field, FormBody, Header, Notice, Page, Skeleton } from '../ui/components';
 import { colors, styles } from '../ui/theme';
 
 export function EditGroupScreen() {
-  const query = useGroup();
+  const auth = useSession();
+  const query = useGroupById(auth.group?.id);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [logo, setLogo] = useState<Attachment | null>();
@@ -25,10 +26,10 @@ export function EditGroupScreen() {
   useEffect(() => { if (query.data && !initial.current) { const group = query.data.data; initial.current = group; setName(group.name); setDescription(group.description); } }, [query.data]);
   const dirty = Boolean(initial.current && (name !== initial.current.name || description !== initial.current.description || logo !== undefined || cover !== undefined));
   useDiscardGuard(dirty && !complete, busy, () => cleanupAttachments([logo, cover].filter((item): item is Attachment => Boolean(item))));
-  useEffect(() => { if (complete) router.replace('/group'); }, [complete]);
+  useEffect(() => { if (complete && auth.group) router.replace({ pathname: '/groups/[id]', params: { id: auth.group.id } }); }, [complete, auth.group]);
   const select = async (slot: 'logo' | 'cover') => {
     setError('');
-    try { const picked = (await pickAttachments(1, true))[0]; if (!picked) return; const old = slot === 'logo' ? logo : cover; if (old) void cleanupAttachments([old]); (slot === 'logo' ? setLogo : setCover)(picked); }
+    try { const picked = await pickImage(); if (!picked) return; const old = slot === 'logo' ? logo : cover; if (old) void cleanupAttachments([old]); (slot === 'logo' ? setLogo : setCover)(picked); }
     catch (caught) { setError(caught instanceof Error ? caught.message : 'We couldn’t open your photo library.'); }
   };
   const save = async () => {

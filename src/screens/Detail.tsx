@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,19 +16,11 @@ import { categoryLabels, type Post } from '../api/types';
 
 const detailDate = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 
-const postSeed = (post: Post) => [...post.id].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) | 0, 0);
-
 function PostDetailContent({ post }: { post: Post }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const width = Math.min(720, windowWidth);
   const heroHeight = Math.max(300, Math.min(500, width * 0.73));
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const engagement = useMemo(() => {
-    const seed = Math.abs(postSeed(post));
-    return { likes: 28 + (seed % 61), comments: 4 + (seed % 13) };
-  }, [post]);
   const media = post.media[0];
   const openGroup = () => router.push({ pathname: '/groups/[id]', params: { id: post.group.id } });
   const share = () => void Share.share({ title: post.title || post.group.name, message: `${post.title}\n\n${post.text}`.trim() });
@@ -61,26 +53,11 @@ function PostDetailContent({ post }: { post: Post }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}><Icon name="calendar" size={21} color={colors.muted} /><Text style={{ color: colors.muted, fontSize: 15 }}>{detailDate(post.publishedAt)}</Text></View>
         {post.text ? <Text selectable style={{ color: colors.ink, fontSize: 16, lineHeight: 25 }}>{post.text}</Text> : null}
 
-        <View style={{ minHeight: 48, paddingHorizontal: 6, borderRadius: 24, backgroundColor: '#F6F5F1', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
-          <Pressable accessibilityRole="button" accessibilityLabel={liked ? 'Unlike post' : 'Like post'} accessibilityState={{ selected: liked }} onPress={() => setLiked(value => !value)} hitSlop={4} style={({ pressed }) => ({ minWidth: 54, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: pressed ? 0.55 : 1 })}><Icon name="heart" size={20} color={liked ? colors.primary : colors.green} /><Text style={{ color: colors.ink, fontSize: 13 }}>{engagement.likes + (liked ? 1 : 0)}</Text></Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="View comments" hitSlop={4} style={({ pressed }) => ({ minWidth: 54, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: pressed ? 0.55 : 1 })}><Icon name="message-circle" size={20} color={colors.green} /><Text style={{ color: colors.ink, fontSize: 13 }}>{engagement.comments}</Text></Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark post'} accessibilityState={{ selected: saved }} onPress={() => setSaved(value => !value)} hitSlop={4} style={({ pressed }) => ({ minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.55 : 1 })}><Icon name="bookmark" size={20} color={saved ? colors.primary : colors.green} /></Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Share post" onPress={share} hitSlop={4} style={({ pressed }) => ({ minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.55 : 1 })}><Icon name="share" size={20} color={colors.green} /></Pressable>
-        </View>
-
         <Pressable accessibilityRole="button" accessibilityLabel={`Open ${post.group.name}`} onPress={openGroup} style={({ pressed }) => ({ minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.65 : 1 })}>
           <Avatar media={post.group.logo} name={post.group.name} size={54} />
           <View style={{ flex: 1, gap: 3 }}><Text numberOfLines={1} style={{ color: colors.ink, fontSize: 16, fontWeight: '700' }}>{post.group.name}</Text><Text style={{ color: colors.muted, fontSize: 13 }}>Groupe scout</Text></View>
           <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F6F5F1' }}><Icon name="chevron-right" size={21} color={colors.green} /></View>
         </Pressable>
-
-        <View style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><Text style={{ color: colors.ink, fontSize: 21, fontWeight: '700' }}>Commentaires ({engagement.comments})</Text><Text style={{ color: colors.green, fontSize: 14, fontWeight: '600' }}>Tout voir</Text></View>
-          <View style={{ padding: 15, borderRadius: 22, backgroundColor: '#F7F6F2', flexDirection: 'row', alignItems: 'flex-start', gap: 11 }}>
-            <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.greenTint }}><Icon name="user" size={20} color={colors.green} /></View>
-            <View style={{ flex: 1, gap: 2 }}><Text style={{ color: colors.ink, fontSize: 14, fontWeight: '700' }}>Yacine B.</Text><Text style={{ color: colors.muted, fontSize: 12 }}>Il y a 2 jours</Text><Text style={{ marginTop: 2, color: colors.ink, fontSize: 14, lineHeight: 20 }}>Quelle belle reprise ! Hâte de vivre toutes ces nouvelles aventures avec le groupe !</Text></View>
-          </View>
-        </View>
       </View>
     </ScrollView>
 

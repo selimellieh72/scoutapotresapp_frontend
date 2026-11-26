@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { session, useSession } from '../providers';
 import { useGroupById } from '../features/queries';
-import { http } from '../config';
+import { http, privacyPolicyUrl } from '../config';
 import { Avatar, Button, Empty, Header, Icon, Notice, Page, Skeleton } from '../ui/components';
 import { colors, styles } from '../ui/theme';
 import { useDialog } from '../ui/dialog';
 import { useTabBarScroll } from '../ui/tabBarScroll';
+
+function PrivacyLink() {
+  return <Pressable accessibilityRole="link" accessibilityLabel="Open the privacy policy" hitSlop={8}
+    onPress={() => void Linking.openURL(privacyPolicyUrl)}
+    style={({ pressed }) => ({ alignSelf: 'center', paddingVertical: 12, opacity: pressed ? 0.6 : 1 })}>
+    <Text style={[styles.muted, { textDecorationLine: 'underline' }]}>Privacy policy</Text>
+  </Pressable>;
+}
 
 export function SettingsScreen() {
   const tabBarScroll = useTabBarScroll();
@@ -30,12 +38,14 @@ export function SettingsScreen() {
       <Notice>Connect to verify your group session.</Notice>
       <Button title="Retry session" variant="secondary" onPress={() => void session.restore()} />
       <Button title="Sign out on this device" variant="ghost" onPress={() => void logout()} />
+      <PrivacyLink />
     </View>
   </Page>;
 
   if (auth.status !== 'group' || !auth.group) return <Page><Header title="Profile" />
     <View style={[styles.content, { flex: 1, justifyContent: 'center' }]}>
       <Button title="Group login" icon="log-in" onPress={() => router.push('/login')} />
+      <PrivacyLink />
     </View>
   </Page>;
 
@@ -66,6 +76,7 @@ export function SettingsScreen() {
           <Button title="Manage posts" icon="edit-3" variant="secondary" onPress={() => router.push('/manage-posts')} />
           <Button title="Log out" icon="log-out" variant="ghost" busy={busy} onPress={() => void logout()} />
         </View>
+        <PrivacyLink />
       </View>
     </ScrollView>
   </Page>;

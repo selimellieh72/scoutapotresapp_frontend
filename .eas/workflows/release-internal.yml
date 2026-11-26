@@ -1,5 +1,5 @@
-# Builds the app and ships it to the internal testers:
-# iOS -> TestFlight (Scout Internal Beta), Android -> Google Play internal testing.
+# Builds the app; iOS is submitted to TestFlight (Scout Internal Beta).
+# The Android bundle is uploaded to Google Play by scripts/play-release.mjs from the GitHub Action.
 # Started on every push to main by .github/workflows/eas-release.yml (GitHub Actions),
 # or by hand with: eas workflow:run .eas/workflows/release-internal.yml
 name: Release to internal testers
@@ -25,12 +25,4 @@ jobs:
     type: submit
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
-      profile: production
-
-  submit_android:
-    name: Submit to Play internal testing
-    needs: [build_android]
-    type: submit
-    params:
-      build_id: ${{ needs.build_android.outputs.build_id }}
       profile: production

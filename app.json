@@ -19,7 +19,7 @@
       }
     },
     "android": {
-      "package": "com.scoutsdesapotres.app",
+      "package": "com.chikirlik.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/android-adaptive-foreground.png",
         "backgroundColor": "#04311F"
